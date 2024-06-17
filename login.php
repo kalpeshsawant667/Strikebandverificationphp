@@ -5,11 +5,10 @@ if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true) {
     header("location: logout.php");
     exit;
 }
-
 $servername = "localhost";
 $username = "root";
 $password = "";
-$database = "bandbarcode";
+$database = "strikebandbarcode";
 $conn = new mysqli($servername, $username, $password, $database);
 
 if ($conn->connect_error) {
@@ -35,6 +34,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($result->num_rows == 1) {
             $row = $result->fetch_assoc();
             if (password_verify($password, $row["password"])) {
+            // if ($password == $row["password"]) {
+                
                 $_SESSION["loggedin"] = true;
                 $_SESSION["empid"] = $row["empid"];
                 $_SESSION["username"] = $row["username"];

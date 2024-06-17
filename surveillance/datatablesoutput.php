@@ -3,7 +3,7 @@ session_start();
 $servername = "localhost";
 $username = "root";
 $password = "";
-$database = "bandbarcode";
+$database = "strikebandbarcode";
 $conn = new mysqli($servername, $username, $password, $database);
 
 if ($conn->connect_error) {

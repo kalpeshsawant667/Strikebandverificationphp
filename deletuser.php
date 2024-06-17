@@ -1,7 +1,7 @@
 
 <?php
 session_start();
-$connection = mysqli_connect('localhost', 'root', '', 'bandbarcode');
+$connection = mysqli_connect('localhost', 'root', '', 'strikebandbarcode');
 $error = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {

@@ -1,9 +1,10 @@
+
 <?php
-// Establish database connection
+session_start();
 $servername = "localhost";
 $username = "root";
 $password = "";
-$database = "bandbarcode";
+$database = "strikebandbarcode";
 $conn = new mysqli($servername, $username, $password, $database);
 
 if ($conn->connect_error) {
@@ -54,7 +55,7 @@ while ($row = $result->fetch_assoc()) {
 // Close file handle
 fclose($output);
 
-// Close database connection
+
 $stmt->close();
 $conn->close();
 ?>

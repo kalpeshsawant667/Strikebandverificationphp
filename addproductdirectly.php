@@ -1,12 +1,12 @@
 <?php
-// Database connection
+session_start();
 $servername = "localhost";
 $username = "root";
 $password = "";
-$database = "bandbarcode";
+$database = "strikebandbarcode";
 $conn = new mysqli($servername, $username, $password, $database);
 
-// Check connection
+
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
@@ -66,7 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["csv_file"])) {
     // } else {
     //   echo "Session variables are not set.";
     // }
-    // Close database connection
+    
     $conn->close();
 }
 ?>
