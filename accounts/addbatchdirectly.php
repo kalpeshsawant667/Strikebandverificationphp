@@ -14,18 +14,20 @@ if ($conn->connect_error) {
 if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > 1800)) {
     session_unset();     
     session_destroy();  
-    echo '<script>alert("You have Been looged out.")</script>';
+    echo '<script>alert("You have been logged out.")</script>';
     header("Location: ../logout.php");
-  }
-  $_SESSION['LAST_ACTIVITY'] = time();
-  $username = $_SESSION["username"];
-  if($username == null)
-  {
-      echo '<script>alert("You have Been looged out.")</script>';
-      header("Location: ../logout.php");
-  }
-  set_time_limit(500);
-  date_default_timezone_set('Asia/Kolkata');
+    exit();
+}
+$_SESSION['LAST_ACTIVITY'] = time();
+$username = $_SESSION["username"];
+if($username == null) {
+    echo '<script>alert("You have been logged out.")</script>';
+    header("Location: ../logout.php");
+    exit();
+}
+set_time_limit(500);
+date_default_timezone_set('Asia/Kolkata');
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $bar_code = $_POST['barcode'];
     $count = intval($_POST['count']);
@@ -40,9 +42,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $letter = substr($bar_code, 10, 1);
     $issue_time = date('Y-m-d H:i:s');
     $issued = 1;
+    $value = "0000";  // Initialize the starting value for the barcode suffix
     $original_length = strlen($value);
 
-    for ($i = 0; $i <= $count; $i++) {
+    for ($i = 0; $i < $count; $i++) {
         $valuebar_code = $company . $color_code . $batch_code . $letter . $value;
 
         $check_stmt = $conn->prepare($check_sql);
@@ -58,37 +61,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $value = str_pad((int)$value + 1, $original_length, "0", STR_PAD_LEFT);
             } else {
                 echo "<script>alert('Error: " . $stmt->error . "');</script>";
-                $backgroundColor= 'red';
+                $backgroundColor = 'red';
                 break;
             }
         } else {
             echo "<script>alert('Barcode $valuebar_code already exists. Please enter another barcode.');</script>";
-            $backgroundColor= 'yellow';
+            $backgroundColor = 'yellow';
             break;
         }
     }
 
     if ($i >= $count) {
         echo "<script>alert('$count Barcodes added successfully.');</script>";
-        $backgroundColor= 'green';
+        $backgroundColor = 'green';
             
-    if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
-        $log = "INSERT INTO user_log (page, username, log_action, user_id) VALUES (?, ?, ?, ?)";
-        $logstmt = $conn->prepare($log);
-        if (!$logstmt) {
-          die("Prepare failed: " . $conn->error);
-      }
-        $page = "addproductdirectlybarcode";
-        $username =  $_SESSION["username"];
-        $log_action = "user added from barcode $bar_code of count $count";
-        $user_id = $_SESSION["empid"];
-        $logstmt->bind_param("sssi", $page, $username, $log_action, $user_id);
-        $logstmt->execute();
-      } else {
-        echo "Session variables are not set.";
-      }
+        if (isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
+            $log = "INSERT INTO user_log (page, username, log_action, user_id) VALUES (?, ?, ?, ?)";
+            $logstmt = $conn->prepare($log);
+            if (!$logstmt) {
+                die("Prepare failed: " . $conn->error);
+            }
+            $page = "addproductdirectlybarcode";
+            $username =  $_SESSION["username"];
+            $log_action = "user added from barcode $bar_code of count $count";
+            $user_id = $_SESSION["empid"];
+            $logstmt->bind_param("sssi", $page, $username, $log_action, $user_id);
+            $logstmt->execute();
+        } else {
+            echo "Session variables are not set.";
+        }
     }
 }
+$conn->close();
 ?>
 
 <!doctype html>
@@ -101,11 +105,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="css/style.css">
     <style type="text/css">
-      body {
-        font-family: "Lato", sans-serif;
-        background-color: <?php echo $backgroundColor; ?>;
-      }
-
+        body {
+            font-family: "Lato", sans-serif;
+            background-color: <?php echo $backgroundColor; ?>;
+        }
         .formclass {
             border: 1px solid #ccc;
             padding: 10px;
@@ -181,46 +184,41 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             padding-right: 8px;
         }
         .profile {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  display: flex;
-  align-items: center;
-  margin-left: 90%;
-}
-
-.profile img {
-  border-radius: 50%;
-  cursor: pointer;
-  height: 50px;
-  width: 50px;
-}
-
-.profile .dropdown {
-  display: none;
-  position: absolute;
-  right: 0;
-  background-color: #f9f9f9;
-  min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-  z-index: 1;
-}
-         .profile .dropdown a {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin-left: 90%;
+        }
+        .profile img {
+            border-radius: 50%;
+            cursor: pointer;
+            height: 50px;
+            width: 50px;
+        }
+        .profile .dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+        .profile .dropdown a {
             color: black;
             padding: 12px 16px;
             text-decoration: none;
             display: block;
         }
-         .profile .dropdown a:hover {
-            background-color: #f1f1f1
-        }
-         .profile:hover .dropdown {
-            display: block;
-        }
-         .profile .dropdown a:hover {
+        .profile .dropdown a:hover {
             background-color: #f1f1f1;
         }
-         .profile .dropdown .show {
+        .profile:hover .dropdown {
+            display: block;
+        }
+        .profile .dropdown .show {
             display: block;
         }
         @media screen and (max-height: 450px) {
@@ -245,29 +243,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     function toggleDropdown() {
         const dropdown = document.getElementById("profileDropdown");
         dropdown.classList.toggle("show");
-      }
-  </script>
-  <div class="profile">
-              <img src="../images/user.png" alt="Profile Image" onclick="toggleDropdown()">
-              <p><?php echo $username; ?></p>
-                <div class="dropdown" id="profileDropdown">
-                    <a href="#"><?php echo $username; ?></a>
-                    <a href="changepassword.php">Change Password</a>
-                    <a href="../logout.php">Logout</a>
-                </div>
-            </div>
-    <form class="formclass" action="addbatchdirectly.php" method="post">
-        <label class="label" for="barcode">Barcode:</label>
-        <input type="text" name="barcode" id="barcode" required><br>
-        <label for="quantity">Quantity :</label>
-        <input type="number" min="1" max="9999" id="count" name="count" required><br>
-        <input type="submit" value="Add Barcode">
-    </form>
+    }
+</script>
+<div class="profile">
+    <img src="../images/user.png" alt="Profile Image" onclick="toggleDropdown()">
+    <p><?php echo $username; ?></p>
+    <div class="dropdown" id="profileDropdown">
+        <a href="#"><?php echo $username; ?></a>
+        <a href="changepassword.php">Change Password</a>
+        <a href="../logout.php">Logout</a>
+    </div>
+</div>
+<form class="formclass" action="addbatchdirectly.php" method="post">
+    <label class="label" for="barcode">Barcode:</label>
+    <input type="text" name="barcode" id="barcode" required><br>
+    <label for="quantity">Quantity :</label>
+    <input type="number" min="1" max="9999" id="count" name="count" required><br>
+    <input type="submit" value="Add Barcode">
+</form>
 
-    <script src="js/jquery.min.js"></script>
-    <script src="js/popper.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    <script src="js/main.js"></script>
+<script src="js/jquery.min.js"></script>
+<script src="js/popper.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/main.js"></script>
 </div>
 </body>
 </html>
