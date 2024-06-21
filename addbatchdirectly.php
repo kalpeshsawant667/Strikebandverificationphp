@@ -283,7 +283,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       }
   </script>
   <div class="profile">
-              <img src="../images/user.png" alt="Profile Image" onclick="toggleDropdown()">
+              <img src="images/user.png" alt="Profile Image" onclick="toggleDropdown()">
               <p><?php echo $username; ?></p>
                 <div class="dropdown" id="profileDropdown">
                     <a href="#"><?php echo $username; ?></a>

@@ -137,7 +137,7 @@ $conn->close();
             ?>
         </tbody>
     </table>
-    
+<!--     
     <div class="pagination">
     <?php
     $total_records = mysqli_num_rows($result);
@@ -150,7 +150,7 @@ $conn->close();
         $conn->close();
       }
     ?>
-    </div>
+    </div> -->
     <script>
         document.getElementById("exportButton").onclick = function() {
             var table = document.getElementById("dataTable");

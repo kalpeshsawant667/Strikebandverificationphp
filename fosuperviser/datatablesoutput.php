@@ -283,7 +283,7 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
         </tbody>
           </table>
     
-    <div class="pagination">
+    <!-- <div class="pagination">
     <?php
     $total_records = mysqli_num_rows($result);
     $total_pages = ceil($total_records / $num_records_per_page);
@@ -295,7 +295,7 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
         $conn->close();
       }
     ?>
-    </div>
+    </div> -->
     <script>
         document.getElementById("exportButton").onclick = function() {
             var table = document.getElementById("dataTable");
