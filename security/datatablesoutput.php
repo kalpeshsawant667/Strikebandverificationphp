@@ -1,10 +1,10 @@
 <?php
 session_start();
 $servername = "localhost";
-$username = "root";
-$password = "";
+$dbusername = "root";
+$dbpassword = "";
 $database = "strikebandbarcode";
-$conn = new mysqli($servername, $username, $password, $database);
+$conn = new mysqli($servername, $dbusername, $dbpassword, $database);
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
@@ -13,7 +13,7 @@ if ($conn->connect_error) {
 // $num_records_per_page = 10; // Set the number of records per page
 
 // $offset = ($current_page - 1) * $num_records_per_page;
-$sql = "SELECT * FROM band WHERE voiditem != true ";
+$sql = "SELECT * FROM band WHERE voiditem != true ORDER BY used_time DESC";
 $result = $conn->query($sql);
 
 
@@ -157,7 +157,49 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
   padding-right: 8px;
 }
 
-/* Some media queries for responsiveness */
+.profile {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: 90%;
+}
+
+.profile img {
+  border-radius: 50%;
+  cursor: pointer;
+  height: 50px;
+  width: 50px;
+}
+
+.profile .dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+         .profile .dropdown a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+         .profile .dropdown a:hover {
+            background-color: #f1f1f1
+        }
+         .profile:hover .dropdown {
+            display: block;
+        }
+         .profile .dropdown a:hover {
+            background-color: #f1f1f1;
+        }
+         .profile .dropdown .show {
+            display: block;
+        }
 @media screen and (max-height: 450px) {
   .sidenav {padding-top: 15px;}
   .sidenav a {font-size: 18px;}
@@ -169,12 +211,27 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
   <h1 style="background-color:rgb(231, 239, 240);">Security</h1>
         <a href="security.php">Security</a>
         <a href="datatablesoutput.php">Report</a>
+        <a href="changepassword.php">Change Password</a>
         <a href="../logout.php">Logout</a>
   </div>
 <div class="main">
-    
+<script>
+    function toggleDropdown() {
+        const dropdown = document.getElementById("profileDropdown");
+        dropdown.classList.toggle("show");
+      }
+  </script>
+  <div class="profile">
+              <img src="../images/user.png" alt="Profile Image" onclick="toggleDropdown()">
+              <p><?php echo $username; ?></p>
+                <div class="dropdown" id="profileDropdown">
+                    <a href="#"><?php echo $username; ?></a>
+                    <a href="changepassword.php">Change Password</a>
+                    <a href="../logout.php">Logout</a>
+                </div>
+            </div>
+
     <h2>Band Details</h2>
-    <a href="excelout.php">Excel Out</a>
     <table>
         <thead>
             <tr>

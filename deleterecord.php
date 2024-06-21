@@ -1,15 +1,27 @@
 <?php
 session_start();
 $servername = "localhost";
-$username = "root";
-$password = "";
+$dbusername = "root";
+$dbpassword = "";
 $database = "strikebandbarcode";
-$conn = new mysqli($servername, $username, $password, $database);
+$conn = new mysqli($servername, $dbusername, $dbpassword, $database);
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
-
+if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > 1800)) {
+  session_unset();     
+  session_destroy();  
+  echo '<script>alert("You have Been looged out.")</script>';
+  header("Location: logout.php");
+}
+$_SESSION['LAST_ACTIVITY'] = time();
+$username = $_SESSION["username"];
+if($username == null)
+{
+    echo '<script>alert("You have Been looged out.")</script>';
+    header("Location: logout.php");
+}
 if (isset($_POST['barcode']) && !empty($_POST['barcode'])) {
   // Escape the barcode value to prevent SQL injection
   $bar_code = mysqli_real_escape_string($conn, $_POST['barcode']);
@@ -26,28 +38,27 @@ if (isset($_POST['barcode']) && !empty($_POST['barcode'])) {
   echo "<div>Barcode parameter is missing </div>";
 }
 
-// if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
-//   $log = "INSERT INTO user_log (page, username, log_action, user_id) VALUES (?, ?, ?, ?)";
-//   $logstmt = $conn->prepare($log);
-//   if (!$logstmt) {
-//     die("Prepare failed: " . $conn->error);
-// }
-//   $page = "deleterecord";
-//   $username =  $_SESSION["username"];
-//   $log_action = "user deleted record".$bar_code;
-//   $user_id = $_SESSION["empid"];
-//   $logstmt->bind_param("sssi", $page, $username, $log_action, $user_id);
-//   $logstmt->execute();
-// } else {
-//   echo "Session variables are not set.";
-// }
+if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
+  $log = "INSERT INTO user_log (page, username, log_action, user_id) VALUES (?, ?, ?, ?)";
+  $logstmt = $conn->prepare($log);
+  if (!$logstmt) {
+    die("Prepare failed: " . $conn->error);
+}
+  $page = "deleterecord";
+  $username =  $_SESSION["username"];
+  $log_action = "user deleted record".$bar_code;
+  $user_id = $_SESSION["empid"];
+  $logstmt->bind_param("sssi", $page, $username, $log_action, $user_id);
+  $logstmt->execute();
+} else {
+  echo "Session variables are not set.";
+}
 
-
-// $conn->close();
+// Close database connection
+$conn->close();
 ?>
 
 <?php
-session_start();
 $connection=mysqli_connect('localhost','root','','bandbarcode');
 $error="";
 ?>
@@ -162,6 +173,49 @@ $error="";
   float: right;
   padding-right: 8px;
 }
+.profile {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: 90%;
+}
+
+.profile img {
+  border-radius: 50%;
+  cursor: pointer;
+  height: 50px;
+  width: 50px;
+}
+
+.profile .dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+         .profile .dropdown a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+         .profile .dropdown a:hover {
+            background-color: #f1f1f1
+        }
+         .profile:hover .dropdown {
+            display: block;
+        }
+         .profile .dropdown a:hover {
+            background-color: #f1f1f1;
+        }
+         .profile .dropdown .show {
+            display: block;
+        }
 
 @media screen and (max-height: 450px) {
   .sidenav {padding-top: 15px;}
@@ -182,7 +236,8 @@ $error="";
     <!-- <a href="addbatch.php">Add Batch</a> -->
     <!-- <a href="addproduct.php">Add Product</a> -->
     <a href="addbarcodedirectly.php">Add Barcode</a>
-    <!-- <a href="addbatchdirectly.php">Add Batch Directly</a> -->
+    <a href="addbatchdirectly.php">Add Batch Directly</a>
+    <a href="addbatchdirectlyall.php">Add Batch All Directly</a>
     <a href="addproductdirectly.php">Add barcode Directly</a>
     <a href="foissue.php">Front Office</a>
     <a href="foonboard.php">Band Update onboard</a>
@@ -191,15 +246,30 @@ $error="";
     <a href="security.php">Security</a>
     <a href="datatablesoutput.php">Datatable Output</a>
     <a href="generatereport.php">generatereport</a>
-    <a href="deleterecord.php">Delete record</a>
+    <!-- <a href="deleterecord.php">Delete record</a> -->
     <a href="useradd.php">Add User</a>
     <a href="resetpassword.php">reset password</a>
     <a href="usermodification.php">user modification</a>
     <a href="deletuser.php">Delete User</a>
-    <a href="Userlogs.php">User Logs</a>
+    <a href="changepassword.php">Change Password</a>
     <a href="logout.php">Logout</a>
   </div>
 <div class="main">
+<script>
+    function toggleDropdown() {
+        const dropdown = document.getElementById("profileDropdown");
+        dropdown.classList.toggle("show");
+      }
+  </script>
+  <div class="profile">
+              <img src="images/user.png" alt="Profile Image" onclick="toggleDropdown()">
+              <p><?php echo $username; ?></p>
+                <div class="dropdown" id="profileDropdown">
+                    <a href="#"><?php echo $username; ?></a>
+                    <a href="changepassword.php">Change Password</a>
+                    <a href="logout.php">Logout</a>
+                </div>
+            </div>
             <form class="pos-style" name="pos" action="deleterecord.php" method="post">
             <div class="form-group">
                 <label> Delete Barcode</label>

@@ -1,14 +1,27 @@
 <?php
 session_start();
 $servername = "localhost";
-$username = "root";
-$password = "";
+$dbusername = "root";
+$dbpassword = "";
 $database = "strikebandbarcode";
-$conn = new mysqli($servername, $username, $password, $database);
-
-
+$conn = new mysqli($servername, $dbusername, $dbpassword, $database);
+$backgroundColor= 'green';
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
+}
+
+if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > 1800)) {
+  session_unset();     
+  session_destroy();  
+  echo '<script>alert("You have Been looged out.")</script>';
+  header("Location: ../logout.php");
+}
+$_SESSION['LAST_ACTIVITY'] = time();
+$username = $_SESSION["username"];
+if($username == null)
+{
+    echo '<script>alert("You have Been looged out.")</script>';
+    header("Location: ../logout.php");
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["csvFile"])) {
@@ -54,8 +67,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["csvFile"])) {
     }
     fclose($handle);
     echo '<script>alert("Barcode added successfully!")</script>';
+    $backgroundColor= 'green';
 } elseif ($_SERVER["REQUEST_METHOD"] == "POST") {
     echo '<script>alert("No files uploaded!")</script>';
+    $backgroundColor= 'red';
 }
 
 ?>
@@ -68,9 +83,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["csvFile"])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload CSV to Database</title>
     <style>
-         body {
-    font-family: Arial, sans-serif;
-}
+      body {
+        font-family: "Lato", sans-serif;
+        background-color: <?php echo $backgroundColor; ?>;
+      }
+
 
 .formclass {
     display: inline-block;
@@ -173,7 +190,7 @@ input[type="submit"]:hover {
         <a href="addbarcode.php">Add Barcode</a>
           <!-- <a href="addbatch.php">Add Batch</a> -->
           <a href="addbarcodedirectly.php">Add Single Directly</a>
-          <!-- <a href="addbatchdirectly.php">Add Batch Directly</a> -->
+          <a href="addbatchdirectly.php">Add Batch Directly</a>
           <a href="addproduct.php">Add multiple barcode</a>
           <a href="datatablesoutput.php">Datatable Output</a>
           <!-- <a href="deleterecord.php">Delete record</a> -->

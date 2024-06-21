@@ -1,19 +1,32 @@
 <?php
 session_start();
 $servername = "localhost";
-$username = "root";
-$password = "";
+$dbusername = "root";
+$dbpassword = "";
 $database = "strikebandbarcode";
-$conn = new mysqli($servername, $username, $password, $database);
+$conn = new mysqli($servername, $dbusername, $dbpassword, $database);
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
+}
+if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > 1800)) {
+  session_unset();     
+  session_destroy();  
+  echo '<script>alert("You have Been looged out.")</script>';
+  header("Location: logout.php");
+}
+$_SESSION['LAST_ACTIVITY'] = time();
+$username = $_SESSION["username"];
+if($username == null)
+{
+    echo '<script>alert("You have Been looged out.")</script>';
+    header("Location: logout.php");
 }
 // $current_page = isset($_GET['page']) ? $_GET['page'] : 1;
 // $num_records_per_page = 10; // Set the number of records per page
 
 // $offset = ($current_page - 1) * $num_records_per_page;
-$sql = "SELECT * FROM band WHERE voiditem != true";
+$sql = "SELECT * FROM band WHERE voiditem != true ORDER BY used_time DESC";
 $result = $conn->query($sql);
 
 
@@ -157,6 +170,49 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
   padding-right: 8px;
 }
 
+.profile {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: 90%;
+}
+
+.profile img {
+  border-radius: 50%;
+  cursor: pointer;
+  height: 50px;
+  width: 50px;
+}
+
+.profile .dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+         .profile .dropdown a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+         .profile .dropdown a:hover {
+            background-color: #f1f1f1
+        }
+         .profile:hover .dropdown {
+            display: block;
+        }
+         .profile .dropdown a:hover {
+            background-color: #f1f1f1;
+        }
+         .profile .dropdown .show {
+            display: block;
+        }
 /* Some media queries for responsiveness */
 @media screen and (max-height: 450px) {
   .sidenav {padding-top: 15px;}
@@ -171,7 +227,8 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
     <!-- <a href="addbatch.php">Add Batch</a> -->
     <!-- <a href="addproduct.php">Add Product</a> -->
     <a href="addbarcodedirectly.php">Add Barcode</a>
-    <!-- <a href="addbatchdirectly.php">Add Batch Directly</a> -->
+    <a href="addbatchdirectly.php">Add Batch Directly</a>
+    <a href="addbatchdirectlyall.php">Add Batch All Directly</a>
     <a href="addproductdirectly.php">Add barcode Directly</a>
     <a href="foissue.php">Front Office</a>
     <a href="foonboard.php">Band Update onboard</a>
@@ -185,10 +242,25 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
     <a href="resetpassword.php">reset password</a>
     <a href="usermodification.php">user modification</a>
     <a href="deletuser.php">Delete User</a>
-    <a href="Userlogs.php">User Logs</a>
+    <a href="changepassword.php">Change Password</a>
     <a href="logout.php">Logout</a>
   </div>
 <div class="main">
+<script>
+    function toggleDropdown() {
+        const dropdown = document.getElementById("profileDropdown");
+        dropdown.classList.toggle("show");
+      }
+  </script>
+  <div class="profile">
+    <img src="images/user.png" alt="Profile Image" onclick="toggleDropdown()">
+    <p><?php echo $username; ?></p>
+      <div class="dropdown" id="profileDropdown">
+          <a href="#"><?php echo $username; ?></a>
+          <a href="changepassword.php">Change Password</a>
+          <a href="logout.php">Logout</a>
+      </div>
+  </div>
     
     <h2>Band Details</h2>
     <a href="excelout.php">Excel Out</a>
@@ -201,9 +273,8 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
                 <th>Batch Code</th>
                 <th>Barcode</th>
                 <th>Issue Time</th>
+                <th>FO Issued</th>
                 <th>Used Time</th>
-                <th>Issued</th>
-                <th>Used</th>
                 <th>Times Scanned</th>
             </tr>
         </thead>
@@ -218,9 +289,8 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
                     echo "<td>" . $row['batch_code'] . "</td>";
                     echo "<td>" . $row['bar_code'] . "</td>";
                     echo "<td>" . $row['issue_time'] . "</td>";
+                    echo "<td>" . $row['fo_issue_time'] . "</td>";
                     echo "<td>" . $row['used_time'] . "</td>";
-                    echo "<td>" . ($row['issued'] ? 'Yes' : 'No') . "</td>";
-                    echo "<td>" . ($row['used'] ? 'Yes' : 'No') . "</td>";
                     echo "<td>" . $row['count'] . "</td>";
                     echo "</tr>";
                 }

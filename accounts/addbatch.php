@@ -1,12 +1,11 @@
 <?php
 session_start();
 $servername = "localhost";
-$username = "root";
-$password = "";
+$dbusername = "root";
+$dbpassword = "";
 $database = "strikebandbarcode";
-$conn = new mysqli($servername, $username, $password, $database);
-
-
+$conn = new mysqli($servername, $dbusername, $dbpassword, $database);
+$backgroundColor= 'green';
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
@@ -35,8 +34,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt->bind_param("ssssssi", $company, $color, $color_code, $batch_code, $bar_code, $issue_time, $issued );
             if ($stmt->execute()) {
                 echo "Barcode added successfully.";
+                $backgroundColor= 'green';
+                
             } else {
                 echo "Error: " . $sql . "<br>" . $conn->error;
+                $backgroundColor= 'red';
             }
         }
         if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
@@ -70,6 +72,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <style>
   body {
     font-family: Arial, sans-serif;
+    background-color: <?php echo $backgroundColor; ?>;
 }
 
 .formclass {
@@ -176,6 +179,7 @@ input[type="submit"]:hover {
           <a href="addproduct.php">Add multiple barcode</a>
           <a href="datatablesoutput.php">Datatable Output</a>
           <!-- <a href="deleterecord.php">Delete record</a> -->
+          <a href="changepassword.php">Change Password</a>
           <a href="../logout.php">Logout</a>
         </div>
 

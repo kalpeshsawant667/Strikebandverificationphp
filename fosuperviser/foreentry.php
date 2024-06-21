@@ -1,16 +1,21 @@
 <?php
 session_start();
 $servername = "localhost";
-$username = "root";
-$password = "";
+$dbusername = "root";
+$dbpassword = "";
 $database = "strikebandbarcode";
-$conn = new mysqli($servername, $username, $password, $database);
+$conn = new mysqli($servername, $dbusername, $dbpassword, $database);
 $backgroundColor = 'green'; // Default color is green
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
-
+  $username = $_SESSION["username"];
+  if($username == null)
+  {
+      echo '<script>alert("You have Been looged out.")</script>';
+      header("Location: ../logout.php");
+  }
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $barcode = isset($_POST['barcode']) ? $_POST['barcode'] : null;
     $remark = $_POST["remark"];
@@ -62,7 +67,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// Log user action
 if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
     $log = "INSERT INTO user_log (page, username, log_action, user_id) VALUES (?, ?, ?, ?)";
     $logstmt = $conn->prepare($log);
@@ -168,6 +172,50 @@ $conn->close();
             float: right;
             padding-right: 8px;
         }
+        .profile {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: 90%;
+}
+
+.profile img {
+  border-radius: 50%;
+  cursor: pointer;
+  height: 50px;
+  width: 50px;
+}
+
+.profile .dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+         .profile .dropdown a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+         .profile .dropdown a:hover {
+            background-color: #f1f1f1
+        }
+         .profile:hover .dropdown {
+            display: block;
+        }
+         .profile .dropdown a:hover {
+            background-color: #f1f1f1;
+        }
+         .profile .dropdown .show {
+            display: block;
+        }
+
         @media screen and (max-height: 450px) {
             .sidenav {padding-top: 15px;}
             .sidenav a {font-size: 18px;}
@@ -177,14 +225,31 @@ $conn->close();
 <body onload="document.pos.barcode.focus();">
 <div class="sidenav">
   <h1 style="background-color:rgb(231, 239, 240);">FOsupervisor</h1>
-  <a href="foissue.php">FO issue</a>
-  <a href="foreentry.php">FO reentry</a>
+    <a href="foissue.php">FO issue</>
+    <a href="reissue.php">Reissue band</a>
     <a href="datatablesoutput.php">Datatable Output</a>
-    <a href="voiditem.php">void band</a>
-    <a href="generatereport.php">generate report</a>
+    <a href="voiditem.php">Void band</a>
+    <a href="generatereport.php">Generate report</a>
+    <a href="changepassword.php">Change Password</a>
     <a href="../logout.php">Logout</a>
   </div>
 <div class="main">
+<script>
+    function toggleDropdown() {
+        const dropdown = document.getElementById("profileDropdown");
+        dropdown.classList.toggle("show");
+      }
+  </script>
+  <div class="profile">
+              <img src="../images/user.png" alt="Profile Image" onclick="toggleDropdown()">
+              <p><?php echo $username; ?></p>
+                <div class="dropdown" id="profileDropdown">
+                    <a href="#"><?php echo $username; ?></a>
+                    <a href="changepassword.php">Change Password</a>
+                    <a href="../logout.php">Logout</a>
+                </div>
+            </div>
+
     <div class="container">
         <h2 style="color: white;">Scan Barcode</h2>
         <form action="foissue.php" method="post">

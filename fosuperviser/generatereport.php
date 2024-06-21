@@ -1,15 +1,22 @@
 <?php
 session_start();
 $servername = "localhost";
-$username = "root";
-$password = "";
+$dbusername = "root";
+$dbpassword = "";
 $database = "strikebandbarcode";
-$conn = new mysqli($servername, $username, $password, $database);
+$conn = new mysqli($servername, $dbusername, $dbpassword, $database);
+$backgroundColor='green';
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
+$username = $_SESSION["username"];
+if($username == null)
+{
+    echo '<script>alert("You have Been looged out.")</script>';
+    header("Location: ../logout.php");
+}
 $start_date = date("Y-m-d");
 $start_time = date("H:i:s");
 $end_date = date("Y-m-d");
@@ -45,14 +52,12 @@ if(isset($_POST["start_date"]) && isset($_POST["end_date"]) && isset($_POST["dat
     $stmt->execute();
     $result = $stmt->get_result();
     
-    // Generate CSV file
     if ($result && $result->num_rows > 0) {
         $data = [];
         while ($row = $result->fetch_assoc()) {
             $data[] = $row;
         }
         
-        // Function to convert data to CSV format
         function array_to_csv($array, $filename = "export.csv", $delimiter = ",") {
             $f = fopen('php://output', 'w');
             fputcsv($f, array_keys($array[0]));
@@ -62,7 +67,6 @@ if(isset($_POST["start_date"]) && isset($_POST["end_date"]) && isset($_POST["dat
             fclose($f);
         }
         
-        // Output CSV file
         header('Content-Type: text/csv');
         header('Content-Disposition: attachment; filename="band_data_report.csv"');
         array_to_csv($data);
@@ -98,10 +102,21 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="css/style.css">
     <style type="text/css">
-    .container{
-        padding: 0;
-        margin: 0;
-    }
+   .container{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.container .generatereportbutton{
+  width: 154px;
+  height: 25px; 
+  text-align: center; 
+  margin-left: 20%;
+  color: black;
+  background-color: white;
+}
     .pos-style{
         display: flex;
         height: 500px;
@@ -117,8 +132,10 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
         justify-content: space-between;
     }
     body {
-  font-family: "Lato", sans-serif;
-}
+        font-family: "Lato", sans-serif;
+        background-color: <?php echo $backgroundColor; ?>;
+      }
+
 .formclass {
   border: 1px solid #ccc;
   padding: 10px;
@@ -209,7 +226,50 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
   padding-right: 8px;
 }
 
-/* Some media queries for responsiveness */
+.profile {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: 90%;
+}
+
+.profile img {
+  border-radius: 50%;
+  cursor: pointer;
+  height: 50px;
+  width: 50px;
+}
+
+.profile .dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+         .profile .dropdown a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+         .profile .dropdown a:hover {
+            background-color: #f1f1f1
+        }
+         .profile:hover .dropdown {
+            display: block;
+        }
+         .profile .dropdown a:hover {
+            background-color: #f1f1f1;
+        }
+         .profile .dropdown .show {
+            display: block;
+        }
+
 @media screen and (max-height: 450px) {
   .sidenav {padding-top: 15px;}
   .sidenav a {font-size: 18px;}
@@ -221,30 +281,48 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
 <body>
 <div class="sidenav">
   <h1 style="background-color:rgb(231, 239, 240);">FOsupervisor</h1>
-  <a href="foissue.php">FO issue</a>
-  <a href="reissue.php">reissue band</a>
+    <a href="foissue.php">FO issue</>
+    <a href="reissue.php">Reissue band</a>
     <a href="datatablesoutput.php">Datatable Output</a>
-    <a href="voiditem.php">void band</a>
-    <a href="generatereport.php">generate report</a>
+    <a href="voiditem.php">Void band</a>
+    <a href="generatereport.php">Generate report</a>
+    <a href="changepassword.php">Change Password</a>
     <a href="../logout.php">Logout</a>
   </div>
   <div class="main">
+  <script>
+    function toggleDropdown() {
+        const dropdown = document.getElementById("profileDropdown");
+        dropdown.classList.toggle("show");
+      }
+  </script>
+  <div class="profile">
+              <img src="../images/user.png" alt="Profile Image" onclick="toggleDropdown()">
+              <p><?php echo $username; ?></p>
+                <div class="dropdown" id="profileDropdown">
+                    <a href="#"><?php echo $username; ?></a>
+                    <a href="changepassword.php">Change Password</a>
+                    <a href="../logout.php">Logout</a>
+                </div>
+            </div>
+<div class="container">
 <h2>Generate Report</h2>
     <form id="reportForm" action="generatereport.php" method="post">
-    <select type="text" id="datetype" name="datetype" type="text" placeholder="datetype" >
+    <select class="generatereportbutton" type="text" id="datetype" name="datetype" type="text" placeholder="datetype" >
             <option value="issue_time">issuedate</option>
             <option value="fo_issue_time">front office date</option>
-            <option value="used_time">used_date</option>
+            <option value="used_time">security used date</option>
         </select><br><br>
         <label for="start_date">Start Date:</label>
         <input type="date" id="start_date" name="start_date" required>
         <input type="time" id="start_time" name="start_time" required><br><br>
         <label for="end_date">End Date:</label>
-        <input type="date" id="end_date" name="end_date" required>
+        <input style="margin-left: 2%" type="date" id="end_date" name="end_date" required>
         <input type="time" id="end_time" name="end_time" required><br><br>
-        <button type="submit" value="Submit" id="generateReportBtn">Generate Report</button>
+        <button type="submit" class="generatereportbutton" value="Submit" id="generateReportBtn">Generate Report</button>
     </form>
     <a href="excelout.php">Excel Out full data</a>
+    </div>
     <!-- <table>
         <thead>
             <tr>

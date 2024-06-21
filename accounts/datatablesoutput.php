@@ -1,16 +1,32 @@
 <?php
 session_start();
 $servername = "localhost";
-$username = "root";
-$password = "";
+$dbusername = "root";
+$dbpassword = "";
 $database = "strikebandbarcode";
-$conn = new mysqli($servername, $username, $password, $database);
+$conn = new mysqli($servername, $dbusername, $dbpassword, $database);
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-$sql = "SELECT * FROM band";
+if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > 1800)) {
+  session_unset();     
+  session_destroy();  
+  echo '<script>alert("You have Been looged out.")</script>';
+  header("Location: ../logout.php");
+}
+$_SESSION['LAST_ACTIVITY'] = time();
+$username = $_SESSION["username"];
+if($username == null)
+{
+    echo '<script>alert("You have Been looged out.")</script>';
+    header("Location: ../logout.php");
+}
+
+$sql = "SELECT * 
+FROM band 
+ORDER BY issue_time DESC, bar_code DESC";
 $result = $conn->query($sql);
 if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
     $log = "INSERT INTO user_log (page, username, log_action, user_id) VALUES (?, ?, ?, ?)";
@@ -139,7 +155,49 @@ input[type="submit"]:hover {
   float: right;
   padding-right: 8px;
 }
+.profile {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: 90%;
+}
 
+.profile img {
+  border-radius: 50%;
+  cursor: pointer;
+  height: 50px;
+  width: 50px;
+}
+
+.profile .dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+         .profile .dropdown a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+         .profile .dropdown a:hover {
+            background-color: #f1f1f1
+        }
+         .profile:hover .dropdown {
+            display: block;
+        }
+         .profile .dropdown a:hover {
+            background-color: #f1f1f1;
+        }
+         .profile .dropdown .show {
+            display: block;
+        }
 @media screen and (max-height: 450px) {
   .sidenav {padding-top: 15px;}
   .sidenav a {font-size: 18px;}
@@ -148,20 +206,34 @@ input[type="submit"]:hover {
 </head>
 <body>    
 <div class="sidenav">
-        <h1 style="background-color:rgb(231, 239, 240);">Accounts</h1>
-        <!-- <a href="addbarcode.php">Add Barcode</a> -->
-          <!-- <a href="addbatch.php">Add Batch</a> -->
-          <a href="addbarcodedirectly.php">Add Single Directly</a>
-          <!-- <a href="addbatchdirectly.php">Add Batch Directly</a> -->
-          <a href="addproductdirectly.php">Add multiple barcode</a>
-          <a href="datatablesoutput.php">Datatable Output</a>
-          <!-- <a href="deleterecord.php">Delete record</a> -->
-          <a href="../logout.php">Logout</a>
-        </div>
+    <h1 style="background-color:rgb(231, 239, 240);">Accounts</h1>
+    <a href="addbarcodedirectly.php">Add Single Directly</a>
+    <a href="addbatchdirectly.php">Add Batch Directly</a>
+    <a href="addproductdirectly.php">Add multiple barcode</a>
+    <a href="datatablesoutput.php">Datatable Output</a>
+    <a href="generatereport.php">Generate report</a>
+    <a href="changepassword.php">Change Password</a>
+    <a href="../logout.php">Logout</a>
+</div>
 
         <div class="main">
+        <script>
+    function toggleDropdown() {
+        const dropdown = document.getElementById("profileDropdown");
+        dropdown.classList.toggle("show");
+      }
+  </script>
+  <div class="profile">
+              <img src="../images/user.png" alt="Profile Image" onclick="toggleDropdown()">
+              <p><?php echo $username; ?></p>
+                <div class="dropdown" id="profileDropdown">
+                    <a href="#"><?php echo $username; ?></a>
+                    <a href="changepassword.php">Change Password</a>
+                    <a href="../logout.php">Logout</a>
+                </div>
+            </div>
+
     <h2>Band Details</h2>
-    <a href="excelout.php">Excel Out</a>
     <table>
         <thead>
             <tr>

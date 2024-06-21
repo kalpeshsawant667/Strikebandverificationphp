@@ -1,10 +1,10 @@
 <?php
 session_start();
 $servername = "localhost";
-$username = "root";
-$password = "";
+$dbusername = "root";
+$dbpassword = "";
 $database = "strikebandbarcode";
-$conn = new mysqli($servername, $username, $password, $database);
+$conn = new mysqli($servername, $dbusername, $dbpassword, $database);
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
@@ -162,6 +162,7 @@ $stmt = null;
     <a href="usermodification.php">user modification</a>
     <a href="deletuser.php">Delete User</a>
     <a href="Userlogs.php">User Logs</a>
+    <a href="changepassword.php">Change Password</a>
     <a href="logout.php">Logout</a>
   </div>
 <div class="main">

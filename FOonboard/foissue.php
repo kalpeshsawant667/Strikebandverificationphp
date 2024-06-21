@@ -1,15 +1,29 @@
 <?php
 session_start();
 $servername = "localhost";
-$username = "root";
-$password = "";
+$dbusername = "root";
+$dbpassword = "";
 $database = "strikebandbarcode";
-$conn = new mysqli($servername, $username, $password, $database);
+$conn = new mysqli($servername, $dbusername, $dbpassword, $database);
 $backgroundColor = 'green'; // Default color is green
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
+
+if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > 1800)) {
+    session_unset();     
+    session_destroy();  
+    echo '<script>alert("You have Been looged out.")</script>';
+    header("Location: ../logout.php");
+  }
+  $_SESSION['LAST_ACTIVITY'] = time();
+  $username = $_SESSION["username"];
+  if($username == null)
+  {
+      echo '<script>alert("You have Been looged out.")</script>';
+      header("Location: ../logout.php");
+  }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $barcode = isset($_POST['barcode']) ? $_POST['barcode'] : null;
@@ -27,7 +41,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
                 if (!$row['fo_issued']) {
-                    $sql = "UPDATE `band` SET `fo_issue_time` = CURRENT_TIMESTAMP(), `fo_issued` = true, `fo_user` = ? WHERE `bar_code` = ?";
+                    $sql = "UPDATE `band` SET `fo_issue_time` = CURRENT_TIMESTAMP(),`used_time` = CURRENT_TIMESTAMP(), `fo_issued` = true,`used` = true, `fo_user` = ? WHERE `bar_code` = ?";
                     $update_stmt = $conn->prepare($sql);
 
                     if ($update_stmt) {
@@ -170,6 +184,68 @@ $conn->close();
             float: right;
             padding-right: 8px;
         }
+        .barcode{
+            border: 1px solid black;
+            height: 100px;
+            width: 750px;
+            font-size:75px;
+        }
+        .barcodelabel{
+            height: 100px;
+            width: 500px;
+            font-size:50px;
+        }
+        .button {
+            width: 10%;
+            height: 6%;
+            font-size: 35px;
+            margin-left: 25%;
+        }
+        .profile {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: 90%;
+}
+
+.profile img {
+  border-radius: 50%;
+  cursor: pointer;
+  height: 50px;
+  width: 50px;
+}
+
+.profile .dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+         .profile .dropdown a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+         .profile .dropdown a:hover {
+            background-color: #f1f1f1
+        }
+         .profile:hover .dropdown {
+            display: block;
+        }
+         .profile .dropdown a:hover {
+            background-color: #f1f1f1;
+        }
+         .profile .dropdown .show {
+            display: block;
+        }
+
+
         @media screen and (max-height: 450px) {
             .sidenav {padding-top: 15px;}
             .sidenav a {font-size: 18px;}
@@ -182,17 +258,34 @@ $conn->close();
     <a href="foissue.php">Front Office</a>
     <a href="foonboard.php">FO onboard</a>
     <a href="datatablesoutput.php">Datatable Output</a>
-    <a href="voiditem.php">void band</a>
-    <a href="generatereport.php">generate report</a>
+    <a href="voiditem.php">Void band</a>
+    <a href="generatereport.php">Generate report</a>
+    <a href="changepassword.php">Change Password</a>
     <a href="../logout.php">Logout</a>
   </div>
 <div class="main">
+<script>
+    function toggleDropdown() {
+        const dropdown = document.getElementById("profileDropdown");
+        dropdown.classList.toggle("show");
+      }
+  </script>
+  <div class="profile">
+              <img src="../images/user.png" alt="Profile Image" onclick="toggleDropdown()">
+              <p><?php echo $username; ?></p>
+                <div class="dropdown" id="profileDropdown">
+                    <a href="#"><?php echo $username; ?></a>
+                    <a href="changepassword.php">Change Password</a>
+                    <a href="../logout.php">Logout</a>
+                </div>
+            </div>
+
     <div class="container">
         <h2 style="color: white;">Scan Barcode</h2>
         <form action="foissue.php" method="post">
-            <label for="barcode">Enter Barcode:</label>
-            <input type="text" id="barcode" name="barcode" required><br><br>
-            <input type="submit" value="Scan">
+        <label  class="barcodelabel" for="barcode">Enter Barcode:</label>
+            <input type="text" id="barcode" name="barcode" class="barcode" required><br><br>
+            <input class="button" type="submit" value="Scan">
         </form>
     </div>
 </div>

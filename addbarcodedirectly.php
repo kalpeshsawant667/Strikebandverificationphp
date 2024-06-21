@@ -1,11 +1,12 @@
 <?php
 session_start();
 $servername = "localhost";
-$username = "root";
-$password = "";
+$dbusername = "root";
+$dbpassword = "";
 $database = "strikebandbarcode";
-$conn = new mysqli($servername, $username, $password, $database);
+$conn = new mysqli($servername, $dbusername, $dbpassword, $database);
 $backgroundColor = 'green';
+
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
@@ -20,14 +21,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $checkstmt->execute();
     $result = $checkstmt->get_result();
 
+
     if ($result->num_rows == 0) {
         $sql = "INSERT INTO `band`(`company`, `color_code`, `batch_code`, `letter`, `bar_code`, `issued`) 
         VALUES (?, ?, ?, ?, ?, ?)";
 
-        $company = substr($bar_code, 0, 2); // BD
-        $color_code = substr($bar_code, 2, 3);
-        $batch_code = substr($bar_code, 5, 4);
-        $letter = substr($bar_code, 9, 1);
+$company = substr($bar_code, 0, 3); // SBD
+$color_code = substr($bar_code, 3, 3);
+$batch_code = substr($bar_code, 6, 4);
+$letter = substr($bar_code, 10, 1);
         $issue_time = date('Y-m-d H:i:s');
         $issued = 1;
 
@@ -43,7 +45,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             $page = "addbarcode";
             $username =  $_SESSION["username"];
-            $log_action = "user added barcode directly";
+            $log_action = "user added barcode directly $bar_code";
             $user_id = $_SESSION["empid"];
             $logstmt->bind_param("sssi", $page, $username, $log_action, $user_id);
             $logstmt->execute();
@@ -78,7 +80,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="css/style.css">
+    <!-- <link rel="stylesheet" href="css/style.css"> -->
     <style type="text/css">
 body {
   font-family: "Lato", sans-serif;
@@ -148,33 +150,82 @@ body {
   color: #f1f1f1;
 }
 
-/* Main content */
 .main {
   margin-left: 200px; /* Same as the width of the sidenav */
   font-size: 20px; /* Increased text to enable scrolling */
   padding: 0px 10px;
 }
 
-/* Add an active class to the active dropdown button */
 .active {
   background-color: green;
   color: white;
 }
 
-/* Dropdown container (hidden by default). Optional: add a lighter background color and some left padding to change the design of the dropdown content */
 .dropdown-container {
   display: none;
   background-color: #262626;
   padding-left: 8px;
 }
 
-/* Optional: Style the caret down icon */
 .fa-caret-down {
   float: right;
   padding-right: 8px;
 }
+.fas{
+    color: black;
+    text-align: right;
+    margin-left: 95%;
+    border-color: white;
+}
+.profile {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: 90%;
+}
 
-/* Some media queries for responsiveness */
+.profile img {
+  border-radius: 50%;
+  cursor: pointer;
+  height: 50px;
+  width: 50px;
+}
+
+.profile .dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+        .profile p{
+            /* margin-left: 207%;
+            margin-top: 1px;
+            width: 5%; */
+        }
+         .profile .dropdown a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+         .profile .dropdown a:hover {
+            background-color: #f1f1f1
+        }
+         .profile:hover .dropdown {
+            display: block;
+        }
+         .profile .dropdown a:hover {
+            background-color: #f1f1f1;
+        }
+         .profile .dropdown .show {
+            display: block;
+        }
+
 @media screen and (max-height: 450px) {
   .sidenav {padding-top: 15px;}
   .sidenav a {font-size: 18px;}
@@ -188,8 +239,9 @@ body {
     <!-- <a href="addbatch.php">Add Batch</a> -->
     <!-- <a href="addproduct.php">Add Product</a> -->
     <a href="addbarcodedirectly.php">Add Barcode</a>
-    <!-- <a href="addbatchdirectly.php">Add Batch Directly</a> -->
+    <a href="addbatchdirectly.php">Add Batch Directly</a>
     <a href="addproductdirectly.php">Add barcode Directly</a>
+    <a href="addproductdirectlyall.php">Add barcode All Directly</a>
     <a href="foissue.php">Front Office</a>
     <a href="foonboard.php">Band Update onboard</a>
     <a href="reissue.php">Re issue Office</a>
@@ -197,16 +249,34 @@ body {
     <a href="security.php">Security</a>
     <a href="datatablesoutput.php">Datatable Output</a>
     <a href="generatereport.php">generatereport</a>
-    <a href="deleterecord.php">Delete record</a>
+    <!-- <a href="deleterecord.php">Delete record</a> -->
     <a href="useradd.php">Add User</a>
     <a href="resetpassword.php">reset password</a>
     <a href="usermodification.php">user modification</a>
     <a href="deletuser.php">Delete User</a>
     <a href="Userlogs.php">User Logs</a>
+    <a href="changepassword.php">Change Password</a>
     <a href="logout.php">Logout</a>
   </div>
+
+  
 <div class="main">
 
+<script>
+    function toggleDropdown() {
+        const dropdown = document.getElementById("profileDropdown");
+        dropdown.classList.toggle("show");
+      }
+  </script>
+  <div class="profile">
+              <img src="images/user.png" alt="Profile Image" onclick="toggleDropdown()">
+              <p><?php echo $username; ?></p>
+                <div class="dropdown" id="profileDropdown">
+                    <a href="#"><?php echo $username; ?></a>
+                    <a href="changepassword.php">Change Password</a>
+                    <a href="logout.php">Logout</a>
+                </div>
+            </div>
         <form class="formclass" action="addbarcodedirectly.php" method="post">
             <label class="label" for="barcode">Barcode:</label>
             <input type="text" name="barcode" id="barcode" required><br>

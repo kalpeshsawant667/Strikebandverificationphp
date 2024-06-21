@@ -1,12 +1,12 @@
 <?php
 session_start();
 $servername = "localhost";
-$username = "root";
-$password = "";
+$dbusername = "root";
+$dbpassword = "";
 $database = "strikebandbarcode";
-$conn = new mysqli($servername, $username, $password, $database);
+$conn = new mysqli($servername, $dbusername, $dbpassword, $database);
 
-
+// Check connection
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
@@ -49,14 +49,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         echo "Session variables are not set.";
     }
 
-    // Execute the statement
     if ($stmt->execute()) {
         echo '<script>alert("Barcode added successfully.")</script>';
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;
     }
-
-    // Close statement and database connection
     $stmt->close();
     $conn->close();
 }
@@ -184,7 +181,7 @@ body {
     <!-- <a href="addbatchdirectly.php">Add Batch Directly</a> -->
     <a href="addproductdirectly.php">Add barcode Directly</a>
     <a href="foissue.php">Front Office</a>
-    <a href="foonboard.php">Front Office</a>
+    <a href="foonboard.php">Band Update onboard</a>
     <a href="reissue.php">Re issue Office</a>
     <a href="voiditem.php">void item</a>
     <a href="security.php">Security</a>
@@ -195,6 +192,8 @@ body {
     <a href="resetpassword.php">reset password</a>
     <a href="usermodification.php">user modification</a>
     <a href="deletuser.php">Delete User</a>
+    <a href="Userlogs.php">User Logs</a>
+    <a href="changepassword.php">Change Password</a>
     <a href="logout.php">Logout</a>
   </div>
 <div class="main">

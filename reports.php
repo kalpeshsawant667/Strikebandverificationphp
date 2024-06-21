@@ -1,16 +1,20 @@
-
 <?php
 session_start();
 $servername = "localhost";
-$username = "root";
-$password = "";
+$dbusername = "root";
+$dbpassword = "";
 $database = "strikebandbarcode";
-$conn = new mysqli($servername, $username, $password, $database);
+$conn = new mysqli($servername, $dbusername, $dbpassword, $database);
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
-
+$username = $_SESSION["username"];
+if($username == null)
+{
+    echo '<script>alert("You have Been looged out.")</script>';
+    header("Location: logout.php");
+}
 $start_date = date("Y-m-d");
 $end_date = date("Y-m-d");
 $datetype = "issue_date";
@@ -55,7 +59,7 @@ while ($row = $result->fetch_assoc()) {
 // Close file handle
 fclose($output);
 
-
+// Close database connection
 $stmt->close();
 $conn->close();
 ?>

@@ -1,16 +1,30 @@
 <?php
 session_start();
 $servername = "localhost";
-$username = "root";
-$password = "";
+$dbusername = "root";
+$dbpassword = "";
 $database = "strikebandbarcode";
-$conn = new mysqli($servername, $username, $password, $database);
+$conn = new mysqli($servername, $dbusername, $dbpassword, $database);
 $backgroundColor = 'green'; 
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
-
+if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > 1800)) {
+    session_unset();     
+    session_destroy();  
+    echo '<script>alert("You have Been looged out.")</script>';
+    header("Location: ../logout.php");
+  }
+  $_SESSION['LAST_ACTIVITY'] = time();
+  $username = $_SESSION["username"];
+  if($username == null)
+  {
+      echo '<script>alert("You have Been looged out.")</script>';
+      header("Location: ../logout.php");
+  }
+  set_time_limit(500);
+  date_default_timezone_set('Asia/Kolkata');
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $barcode = isset($_POST['oldbarcode']) ? $_POST['oldbarcode'] : null;
     $upgradebarcode = isset($_POST['upgradebarcode']) ? $_POST['upgradebarcode'] : null;
@@ -23,36 +37,45 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $stmt->execute();
                 $result = $stmt->get_result();
                 if ($result->num_rows > 0) {
-                    $checkupdatesql = "SELECT * FROM band WHERE `bar_code` = ? AND voiditem != true && `fo_issued` != true";
+                    $checkupdatesql = "SELECT * FROM band WHERE `bar_code` = ? AND voiditem != true AND `fo_issued` != true";
                     $updatestmt = $conn->prepare($checkupdatesql);
                     $updatestmt->bind_param("s", $upgradebarcode);
                     $updatestmt->execute();
                     $upgraderesult = $updatestmt->get_result();
                     if ($upgraderesult->num_rows > 0) {
                     while ($row = $result->fetch_assoc()) {
-                        $sql = "UPDATE `band` SET `fo_issue_time` = CURRENT_TIMESTAMP(), `used_time`=  CURRENT_TIMESTAMP(), `remarks` = 'From $barcode', count=count+1, `fo_issued` = true, `used` = true, `fo_user` = ?, `upgradedfrombarcode`= ? WHERE `bar_code` = ?";
-                        $update_stmt = $conn->prepare($sql);
-                        $update_stmt->bind_param("sss", $username, $barcode, $upgradebarcode);
-                        $update_stmt->execute();
-                        $update_stmt->close();
-                        $update_sql = "UPDATE `band` SET `voiditem` = 1, `remarks` = 'Upgraded $upgradebarcode' WHERE `bar_code` = ?";
-                        $update_st = $conn->prepare($update_sql);
-                        $update_st->bind_param("s", $barcode);
-                        $update_st->execute();
-                        $update_st->close();
+
+                        try {
+                            $sql = "UPDATE `band` SET `fo_issue_time` = CURRENT_TIMESTAMP(), `used_time`=  CURRENT_TIMESTAMP(), `remarks` = 'From $barcode .by .$username', count=count+1, `fo_issued` = true, `used` = true, `fo_user` = ?, `upgradedfrombarcode`= ? WHERE `bar_code` = ?";
+                            $update_stmt = $conn->prepare($sql);
+                            $update_stmt->bind_param("sss", $username, $barcode, $upgradebarcode);
+                            $update_stmt->execute();
+                            $update_stmt->close();
+                        } catch (mysqli_sql_exception $e) {
+                            echo "MySQLi Error at updating new band: " . $e->getMessage();
+                        }
+                        
+                        try {
+                            $update_sql = "UPDATE `band` SET `voiditem` = 1, `voidtime` = CURRENT_TIMESTAMP(), `remarks` = 'Upgraded $upgradebarcode' WHERE `bar_code` = ?";
+                            $update_st = $conn->prepare($update_sql);
+                            $update_st->bind_param("s", $barcode);
+                            $update_st->execute();
+                            $update_st->close();
+                        } catch (mysqli_sql_exception $e) {
+                            echo "MySQLi Error at voiding the band: " . $e->getMessage();
+                        }
+                        
                         $backgroundColor = 'green';
                         echo "<div style='background-color: green; text-align: center; font-size: 5rem; color: white'>Band issued successfully `$upgradebarcode`</div>";
                     }
                 } else {
                     $backgroundColor = 'red';
-                    echo "<div style='background-color: red; text-align: center; font-size: 5rem; color: black'>Barcode not found.</div>";
+                    echo "<div style='background-color: red; text-align: center; font-size: 5rem; color: black'>Upgrading Band not found.</div>";
                 }
-
-                // Close the result set
                 $upgraderesult->close();
             } else {
                 $backgroundColor = 'red';
-                echo "<div style='background-color: red; text-align: center; font-size: 5rem; color: black'>Error </div>";
+                echo "<div style='background-color: red; text-align: center; font-size: 5rem; color: black'> FO issued Band Not Found</div>";
             }
         } else {
             $backgroundColor = 'red';
@@ -60,13 +83,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 } else {
-    $backgroundColor = 'red';
-    echo "<div style='background-color: red; text-align: center; font-size: 5rem; color: black'>No Barcode</div>";
+    $backgroundColor = 'green';
+    // echo "<div style=' text-align: center; font-size: 5rem; color: black'>Please Scan Band</div>";
 }
 
 
-
-// Log user action
 if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
     $log = "INSERT INTO user_log (page, username, log_action, user_id) VALUES (?, ?, ?, ?)";
     $logstmt = $conn->prepare($log);
@@ -75,7 +96,15 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
     }
     $page = "foissue";
     $username = $_SESSION["username"];
-    $log_action = "FO upgraded barcode of guest ".$username;
+    $log_action = "FO upgraded barcode of guest ";
+    if (isset($barcode)) {
+        $log_action .= $barcode;
+    }
+    if (isset($upgradebarcode)) {
+        $log_action .= " to " . $upgradebarcode;
+    }
+    $log_action .= " by " . $username;
+    
     $user_id = $_SESSION["empid"];
     $logstmt->bind_param("sssi", $page, $username, $log_action, $user_id);
     $logstmt->execute();
@@ -97,6 +126,21 @@ $conn->close();
         body {
             font-family: "Lato", sans-serif;
             background-color: <?php echo $backgroundColor; ?>;
+        }
+        .container{
+            text-align: center;
+        }
+        .upgradebutton{
+            background-color: rgb(0, 0, 255);
+            color: white;
+            font-size: 2rem;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .upgradebutton:hover {
+            background-color: #45a049;
         }
         .formclass {
             border: 1px solid #ccc;
@@ -179,6 +223,51 @@ $conn->close();
         .newband{
             padding-right: 1%;
         }
+        .profile {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: 90%;
+}
+
+.profile img {
+  border-radius: 50%;
+  cursor: pointer;
+  height: 50px;
+  width: 50px;
+}
+
+.profile .dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+         .profile .dropdown a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+         .profile .dropdown a:hover {
+            background-color: #f1f1f1
+        }
+         .profile:hover .dropdown {
+            display: block;
+        }
+         .profile .dropdown a:hover {
+            background-color: #f1f1f1;
+        }
+         .profile .dropdown .show {
+            display: block;
+        }
+
+
         @media screen and (max-height: 450px) {
             .sidenav {padding-top: 15px;}
             .sidenav a {font-size: 18px;}
@@ -191,11 +280,28 @@ $conn->close();
     <a href="foissue.php">Front Office</a>
     <a href="foonboard.php">FO onboard</a>
     <a href="datatablesoutput.php">Datatable Output</a>
-    <a href="voiditem.php">void band</a>
-    <a href="generatereport.php">generate report</a>
+    <a href="voiditem.php">Void band</a>
+    <a href="generatereport.php">Generate report</a>
+    <a href="changepassword.php">Change Password</a>
     <a href="../logout.php">Logout</a>
   </div>
 <div class="main">
+<script>
+    function toggleDropdown() {
+        const dropdown = document.getElementById("profileDropdown");
+        dropdown.classList.toggle("show");
+      }
+  </script>
+  <div class="profile">
+              <img src="../images/user.png" alt="Profile Image" onclick="toggleDropdown()">
+              <p><?php echo $username; ?></p>
+                <div class="dropdown" id="profileDropdown">
+                    <a href="#"><?php echo $username; ?></a>
+                    <a href="changepassword.php">Change Password</a>
+                    <a href="../logout.php">Logout</a>
+                </div>
+            </div>
+
     <div class="container">
         <h2 style="color: white;">Scan Barcodes</h2>
         <form action="foonboard.php" method="post">
@@ -203,7 +309,7 @@ $conn->close();
             <input type="text" id="oldbarcode" name="oldbarcode" required><br><br>
             <label  class="newband" for="upgradebarcode">Upgrade Band to:</label>
             <input type="text" id="upgradebarcode" name="upgradebarcode" required><br><br>
-            <input type="submit" value="Upgrade band">
+            <input  class="upgradebutton" type="submit" value="Upgrade band">
         </form>
     </div>
 </div>

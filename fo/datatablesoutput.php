@@ -1,19 +1,26 @@
 <?php
 session_start();
 $servername = "localhost";
-$username = "root";
-$password = "";
+$dbusername = "root";
+$dbpassword = "";
 $database = "strikebandbarcode";
-$conn = new mysqli($servername, $username, $password, $database);
+$conn = new mysqli($servername, $dbusername, $dbpassword, $database);
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
-$current_page = isset($_GET['page']) ? $_GET['page'] : 1;
-$num_records_per_page = 10; // Set the number of records per page
+
+$username = $_SESSION["username"];
+if($username == null)
+{
+    echo '<script>alert("You have Been looged out.")</script>';
+    header("Location: ../logout.php");
+}
+// $current_page = isset($_GET['page']) ? $_GET['page'] : 1;
+// $num_records_per_page = 10; // Set the number of records per page
 
 // $offset = ($current_page - 1) * $num_records_per_page;
-$sql = "SELECT * FROM band";
+$sql = "SELECT * FROM band ORDER BY fo_issue_time DESC";
 $result = $conn->query($sql);
 
 
@@ -157,7 +164,51 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
   padding-right: 8px;
 }
 
-/* Some media queries for responsiveness */
+.profile {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: 90%;
+}
+
+.profile img {
+  border-radius: 50%;
+  cursor: pointer;
+  height: 50px;
+  width: 50px;
+}
+
+.profile .dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+         .profile .dropdown a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+         .profile .dropdown a:hover {
+            background-color: #f1f1f1
+        }
+         .profile:hover .dropdown {
+            display: block;
+        }
+         .profile .dropdown a:hover {
+            background-color: #f1f1f1;
+        }
+         .profile .dropdown .show {
+            display: block;
+        }
+
+
 @media screen and (max-height: 450px) {
   .sidenav {padding-top: 15px;}
   .sidenav a {font-size: 18px;}
@@ -172,12 +223,28 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
     <a href="voiditem.php">void band</a>
     <a href="reissue.php">reissue band</a>
     <!-- <a href="generatereport.php">generate report</a> -->
+    <a href="changepassword.php">Change Password</a>
     <a href="../logout.php">Logout</a>
   </div>
 <div class="main">
     
+<script>
+    function toggleDropdown() {
+        const dropdown = document.getElementById("profileDropdown");
+        dropdown.classList.toggle("show");
+      }
+  </script>
+  <div class="profile">
+              <img src="../images/user.png" alt="Profile Image" onclick="toggleDropdown()">
+              <p><?php echo $username; ?></p>
+                <div class="dropdown" id="profileDropdown">
+                    <a href="#"><?php echo $username; ?></a>
+                    <a href="changepassword.php">Change Password</a>
+                    <a href="../logout.php">Logout</a>
+                </div>
+            </div>
+
     <h2>Band Details</h2>
-    <a href="excelout.php">Excel Out</a>
     <table>
         <thead>
             <tr>
@@ -186,7 +253,7 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
                 <th>Color Code</th>
                 <th>Batch Code</th>
                 <th>Barcode</th>
-                <th>Issue Time</th>
+                <th>FO Issue Time</th>
                 <th>Used Time</th>
                 <th>Issued</th>
                 <th>Used</th>
@@ -203,9 +270,9 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
                     echo "<td>" . $row['color_code'] . "</td>";
                     echo "<td>" . $row['batch_code'] . "</td>";
                     echo "<td>" . $row['bar_code'] . "</td>";
-                    echo "<td>" . $row['issue_time'] . "</td>";
+                    echo "<td>" . $row['fo_issue_time'] . "</td>";
                     echo "<td>" . $row['used_time'] . "</td>";
-                    echo "<td>" . ($row['issued'] ? 'Yes' : 'No') . "</td>";
+                    echo "<td>" . ($row['fo_issued'] ? 'Yes' : 'No') . "</td>";
                     echo "<td>" . ($row['used'] ? 'Yes' : 'No') . "</td>";
                     echo "<td>" . $row['count'] . "</td>";
                     echo "</tr>";
@@ -218,7 +285,7 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
     </table>
     
     <div class="pagination">
-    <?php
+    <!-- <?php
     $total_records = mysqli_num_rows($result);
     $total_pages = ceil($total_records / $num_records_per_page);
       for($i=0;$i<$total_pages;$i++)
@@ -228,7 +295,7 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
       if ($conn->ping()) {
         $conn->close();
       }
-    ?>
+    ?> -->
     </div>
     <script>
         document.getElementById("exportButton").onclick = function() {

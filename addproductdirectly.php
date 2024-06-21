@@ -1,72 +1,98 @@
 <?php
 session_start();
 $servername = "localhost";
-$username = "root";
-$password = "";
+$dbusername = "root";
+$dbpassword = "";
 $database = "strikebandbarcode";
-$conn = new mysqli($servername, $username, $password, $database);
-
-
+$conn = new mysqli($servername, $dbusername, $dbpassword, $database);
+$backgroundColor= 'green';
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
+if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > 1800)) {
+  session_unset();     
+  session_destroy();  
+  echo '<script>alert("You have Been looged out.")</script>';
+  header("Location: ../logout.php");
+}
+$_SESSION['LAST_ACTIVITY'] = time();
+$username = $_SESSION["username"];
+if($username == null)
+{
+    echo '<script>alert("You have Been looged out.")</script>';
+    header("Location: ../logout.php");
+}
+
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["csv_file"])) {
-    $file_name = $_FILES["csv_file"]["name"];
-    $file_ext = pathinfo($file_name, PATHINFO_EXTENSION);
-    if ($file_ext !== "csv") {
-        die("Please upload a CSV file.");
+  $file_name = $_FILES["csv_file"]["name"];
+  $file_ext = pathinfo($file_name, PATHINFO_EXTENSION);
+  
+  if ($file_ext !== "csv") {
+      echo "<script>console.log('Please upload a CSV file.');</script>";
+      die("Please upload a CSV file.");
+  }
+  
+  $file_tmp = $_FILES["csv_file"]["tmp_name"];
+  
+  if (($handle = fopen($file_tmp, "r")) !== FALSE) {
+      fgetcsv($handle, 1000, ","); 
+      while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+          $company = substr($data[0], 0, 2);
+          $color_code = substr($data[0], 2, 3);
+          $batch_code = substr($data[0], 5, 4);
+          $letter = substr($data[0], 9, 1);
+          $bar_code = $data[0];
+          date_default_timezone_set('Asia/Kolkata');
+          $issue_time = date('Y-m-d H:i:s');
+          $issued = 1;
+  
+          $sql = "SELECT * FROM band WHERE bar_code = ?";
+          $stmt = $conn->prepare($sql);
+          $stmt->bind_param("s", $bar_code);
+          $stmt->execute();
+          $stmt->store_result();
+  
+          if ($stmt->num_rows > 0) {
+              echo "<script>alert('Barcode $bar_code already exists.');</script>";
+              $backgroundColor= 'yellow';
+          } else {
+              $insert_sql = "INSERT INTO band (company, color_code, batch_code, letter, bar_code, issue_time, issued) 
+                             VALUES (?, ?, ?, ?, ?, ?, ?)";
+              $insert_stmt = $conn->prepare($insert_sql);
+              $insert_stmt->bind_param("ssssssi", $company, $color_code, $batch_code, $letter, $bar_code, $issue_time, $issued);
+  
+              if ($insert_stmt->execute()) {
+                  echo "<script>console.log('Barcode $bar_code added successfully.');</script>";
+                  $backgroundColor= 'green';
+              } else {
+                  echo "<script>alert('Error: Could not insert barcode $bar_code.');</script>";
+                  $backgroundColor= 'red';
+                  break;
+              }
+          }
+      }
+      echo "<script>alert('CSV file processed successfully.');</script>";
+      fclose($handle);
+  } else {
+      echo "Error opening file.";
+  }  
+
+    if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
+      $log = "INSERT INTO user_log (page, username, log_action, user_id) VALUES (?, ?, ?, ?)";
+      $logstmt = $conn->prepare($log);
+      if (!$logstmt) {
+        die("Prepare failed: " . $conn->error);
     }
-
-    $file_tmp = $_FILES["csv_file"]["tmp_name"];
-
-    if (($handle = fopen($file_tmp, "r")) !== FALSE) {
-      fgetcsv($handle, 1000, ",");
-        while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
-            $company = substr($data[0], 0, 2);
-            $color_code = substr($data[0], 2, 3);
-            $batch_code = substr($data[0], 5, 4);
-            $letter = substr($data[0], 9, 1);
-            $bar_code = $data[0];
-            $issue_time = date('Y-m-d H:i:s');
-            $issued = 1;
-
-            $sql = "INSERT INTO `band`(`company`, `color_code`, `batch_code`, `letter`, `bar_code`, `issued`) 
-            VALUES (?, ?, ?, ?, ?, ?)";
-
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sssssi", $company, $color_code, $batch_code, $letter, $bar_code, $issued);
-
-            if ($stmt->execute()) {
-                // echo "<script>alert('Barcode added successfully.');</script>";
-            } else {
-                echo "<script>alert('Error');</script>" . $sql . "<br>" . $conn->error;
-                break;
-            }
-        }
-        echo "<script>alert('Barcode added successfully.');</script>";
-        fclose($handle);
+      $page = "addproductdirectlybarcode";
+      $username =  $_SESSION["username"];
+      $log_action = "user added barcode csv file directly";
+      $user_id = $_SESSION["empid"];
+      $logstmt->bind_param("sssi", $page, $username, $log_action, $user_id);
+      $logstmt->execute();
     } else {
-        echo "Error opening file.";
+      echo "Session variables are not set.";
     }
-
-
-    // if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
-    //   $log = "INSERT INTO user_log (page, username, log_action, user_id) VALUES (?, ?, ?, ?)";
-    //   $logstmt = $conn->prepare($log);
-    //   if (!$logstmt) {
-    //     die("Prepare failed: " . $conn->error);
-    // }
-    //   $page = "addproductdirectlybarcode";
-    //   $username =  $_SESSION["username"];
-    //   $log_action = "user added barcode csv file directly";
-    //   $user_id = $_SESSION["empid"];
-    //   $logstmt->bind_param("sssi", $page, $username, $log_action, $user_id);
-    //   $logstmt->execute();
-    // } else {
-    //   echo "Session variables are not set.";
-    // }
-    
     $conn->close();
 }
 ?>
@@ -94,9 +120,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["csv_file"])) {
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="css/style.css">
     <style type="text/css">
-body {
-  font-family: "Lato", sans-serif;
-}
+      body {
+        font-family: "Lato", sans-serif;
+        background-color: <?php echo $backgroundColor; ?>;
+      }
 .formclass {
   border: 1px solid #ccc;
   padding: 10px;
@@ -187,7 +214,49 @@ body {
   padding-right: 8px;
 }
 
-/* Some media queries for responsiveness */
+.profile {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: 90%;
+}
+
+.profile img {
+  border-radius: 50%;
+  cursor: pointer;
+  height: 50px;
+  width: 50px;
+}
+
+.profile .dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+         .profile .dropdown a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+         .profile .dropdown a:hover {
+            background-color: #f1f1f1
+        }
+         .profile:hover .dropdown {
+            display: block;
+        }
+         .profile .dropdown a:hover {
+            background-color: #f1f1f1;
+        }
+         .profile .dropdown .show {
+            display: block;
+        }
 @media screen and (max-height: 450px) {
   .sidenav {padding-top: 15px;}
   .sidenav a {font-size: 18px;}
@@ -201,7 +270,7 @@ body {
     <!-- <a href="addbatch.php">Add Batch</a> -->
     <!-- <a href="addproduct.php">Add Product</a> -->
     <a href="addbarcodedirectly.php">Add Barcode</a>
-    <!-- <a href="addbatchdirectly.php">Add Batch Directly</a> -->
+    <a href="addbatchdirectly.php">Add Batch Directly</a>
     <a href="addproductdirectly.php">Add barcode Directly</a>
     <a href="foissue.php">Front Office</a>
     <a href="foonboard.php">Band Update onboard</a>
@@ -215,15 +284,31 @@ body {
     <a href="resetpassword.php">reset password</a>
     <a href="usermodification.php">user modification</a>
     <a href="deletuser.php">Delete User</a>
-    <a href="Userlogs.php">User Logs</a>
     <a href="changepassword.php">Change Password</a>
     <a href="logout.php">Logout</a>
   </div>
     <div class="main">
+    <script>
+    function toggleDropdown() {
+        const dropdown = document.getElementById("profileDropdown");
+        dropdown.classList.toggle("show");
+      }
+  </script>
+  <div class="profile">
+              <img src="../images/user.png" alt="Profile Image" onclick="toggleDropdown()">
+              <p><?php echo $username; ?></p>
+                <div class="dropdown" id="profileDropdown">
+                    <a href="#"><?php echo $username; ?></a>
+                    <a href="changepassword.php">Change Password</a>
+                    <a href="logout.php">Logout</a>
+                </div>
+            </div>
+
         <form class="formclass" action="addproductdirectly.php" method="post" enctype="multipart/form-data">
             <label class="label" for="csv_file">Upload CSV file:</label>
+            <br>
             <input type="file" name="csv_file" id="csv_file" accept=".csv" required><br>
-
+            <br>
             <input type="submit" value="Upload Barcode">
         </form>
     </div>

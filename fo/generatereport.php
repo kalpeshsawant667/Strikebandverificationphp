@@ -1,16 +1,95 @@
 <?php
 session_start();
 $servername = "localhost";
-$username = "root";
-$password = "";
+$dbusername = "root";
+$dbpassword = "";
 $database = "strikebandbarcode";
-$conn = new mysqli($servername, $username, $password, $database);
+$conn = new mysqli($servername, $dbusername, $dbpassword, $database);
+$backgroundColor='green';
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
+$username = $_SESSION["username"];
+if($username == null)
+{
+    echo '<script>alert("You have Been looged out.")</script>';
+    header("Location: ../logout.php");
+}
+$start_date = date("Y-m-d");
+$start_time = date("H:i:s");
+$end_date = date("Y-m-d");
+$end_time = date("H:i:s");
+$datetype = "issue_time";
+$stmt = null;
 
+if(isset($_POST["start_date"]) && isset($_POST["end_date"]) && isset($_POST["datetype"])) {
+    $start_date = $_POST["start_date"];
+    $start_time = $_POST["start_time"];
+    $end_date = $_POST["end_date"];
+    $end_time = $_POST["end_time"];
+    $datetype = $_POST["datetype"];
+    $start_datetime = $start_date . ' ' . $start_time;
+    $end_datetime = $end_date . ' ' . $end_time;
+    
+    switch($datetype) {
+        case "issue_time":
+            $sql = "SELECT * FROM band WHERE issue_time BETWEEN ? AND ?";
+            break;
+        case "fo_issue_time":
+            $sql = "SELECT * FROM band WHERE fo_issue_time BETWEEN ? AND ?";
+            break;
+        case "used_time":
+            $sql = "SELECT * FROM band WHERE used_time BETWEEN ? AND ?";
+            break;
+        default:
+            $sql = "SELECT * FROM band WHERE issue_time BETWEEN ? AND ?";
+    }
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ss", $start_datetime, $end_datetime);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result && $result->num_rows > 0) {
+        $data = [];
+        while ($row = $result->fetch_assoc()) {
+            $data[] = $row;
+        }
+        
+        function array_to_csv($array, $filename = "export.csv", $delimiter = ",") {
+            $f = fopen('php://output', 'w');
+            fputcsv($f, array_keys($array[0]));
+            foreach ($array as $row) {
+                fputcsv($f, $row);
+            }
+            fclose($f);
+        }
+        
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="band_data_report.csv"');
+        array_to_csv($data);
+        exit;
+    } else {
+        echo "<p>No records found.</p>";
+    }
+}
+if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
+    $log = "INSERT INTO user_log (page, username, log_action, user_id) VALUES (?, ?, ?, ?)";
+    $logstmt = $conn->prepare($log);
+    if (!$logstmt) {
+      die("Prepare failed: " . $conn->error);
+  }
+    $page = "generatereport";
+    $username =  $_SESSION["username"];
+    $log_action = "user generated report";
+    $user_id = $_SESSION["empid"];
+    $logstmt->bind_param("sssi", $page, $username, $log_action, $user_id);
+    $logstmt->execute();
+  } else {
+    echo "Session variables are not set.";
+  }
 ?>
 
 <!DOCTYPE html>
@@ -23,10 +102,21 @@ if ($conn->connect_error) {
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="css/style.css">
     <style type="text/css">
-    .container{
-        padding: 0;
-        margin: 0;
-    }
+   .container{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.container .generatereportbutton{
+  width: 154px;
+  height: 25px; 
+  text-align: center; 
+  margin-left: 20%;
+  color: black;
+  background-color: white;
+}
     .pos-style{
         display: flex;
         height: 500px;
@@ -42,8 +132,10 @@ if ($conn->connect_error) {
         justify-content: space-between;
     }
     body {
-  font-family: "Lato", sans-serif;
-}
+        font-family: "Lato", sans-serif;
+        background-color: <?php echo $backgroundColor; ?>;
+      }
+
 .formclass {
   border: 1px solid #ccc;
   padding: 10px;
@@ -134,7 +226,50 @@ if ($conn->connect_error) {
   padding-right: 8px;
 }
 
-/* Some media queries for responsiveness */
+.profile {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: 90%;
+}
+
+.profile img {
+  border-radius: 50%;
+  cursor: pointer;
+  height: 50px;
+  width: 50px;
+}
+
+.profile .dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+         .profile .dropdown a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+         .profile .dropdown a:hover {
+            background-color: #f1f1f1
+        }
+         .profile:hover .dropdown {
+            display: block;
+        }
+         .profile .dropdown a:hover {
+            background-color: #f1f1f1;
+        }
+         .profile .dropdown .show {
+            display: block;
+        }
+
 @media screen and (max-height: 450px) {
   .sidenav {padding-top: 15px;}
   .sidenav a {font-size: 18px;}
@@ -148,27 +283,47 @@ if ($conn->connect_error) {
   <h1 style="background-color:rgb(231, 239, 240);">FO</h1>
     <a href="foissue.php">Front Office</a>
     <a href="datatablesoutput.php">Datatable Output</a>
-    <a href="voiditem.php">void band</a>
-    <a href="reissue.php">reissue band</a>
+    <a href="voiditem.php">Void band</a>
+    <a href="reissue.php">Reissue band</a>
     <!-- <a href="generatereport.php">generate report</a> -->
+    <a href="changepassword.php">Change Password</a>
     <a href="../logout.php">Logout</a>
   </div>
   <div class="main">
+  <script>
+    function toggleDropdown() {
+        const dropdown = document.getElementById("profileDropdown");
+        dropdown.classList.toggle("show");
+      }
+  </script>
+  <div class="profile">
+              <img src="../images/user.png" alt="Profile Image" onclick="toggleDropdown()">
+              <p><?php echo $username; ?></p>
+                <div class="dropdown" id="profileDropdown">
+                    <a href="#"><?php echo $username; ?></a>
+                    <a href="changepassword.php">Change Password</a>
+                    <a href="../logout.php">Logout</a>
+                </div>
+            </div>
+<div class="container">
 <h2>Generate Report</h2>
     <form id="reportForm" action="generatereport.php" method="post">
-    <select type="text" id="datetype" name="datetype" type="text" placeholder="datetype" >
+    <select class="generatereportbutton" type="text" id="datetype" name="datetype" type="text" placeholder="datetype" >
             <option value="issue_time">issuedate</option>
             <option value="fo_issue_time">front office date</option>
-            <option value="used_time">used_date</option>
+            <option value="used_time">security used date</option>
         </select><br><br>
         <label for="start_date">Start Date:</label>
         <input type="date" id="start_date" name="start_date" required>
+        <input type="time" id="start_time" name="start_time" required><br><br>
         <label for="end_date">End Date:</label>
-        <input type="date" id="end_date" name="end_date" required>
-        <button type="submit" value="Submit" id="generateReportBtn">Generate Report</button>
+        <input style="margin-left: 3%" type="date" id="end_date" name="end_date" required>
+        <input type="time" id="end_time" name="end_time" required><br><br>
+        <button type="submit" class="generatereportbutton" value="Submit" id="generateReportBtn">Generate Report</button>
     </form>
-<!-- 
-    <table>
+    <a href="excelout.php">Excel Out full data</a>
+    </div>
+    <!-- <table>
         <thead>
             <tr>
                 <th>Serial Number</th>
@@ -183,97 +338,103 @@ if ($conn->connect_error) {
                 <th>Times Scanned</th>
             </tr>
         </thead>
-        <tbody> -->
-    <?php
-
-$start_date = date("Y-m-d");
-$end_date = date("Y-m-d");
-$datetype = "issue_time";
-$stmt = null; 
-
-if(isset($_POST["start_date"]) && isset($_POST["end_date"])&& isset($_POST["datetype"])) {
-    $start_date = $_POST["start_date"];
-    $end_date = $_POST["end_date"];
-    $datetype = $_POST["datetype"];
-    $sql = "SELECT * FROM band WHERE $datetype BETWEEN ? AND ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ss", $start_date, $end_date);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-// $num_records_per_page = 10;
-$current_page = isset($_GET['page']) ? $_GET['page'] : 1;
-// $offset = ($current_page - 1) * $num_records_per_page;
-
-    if ($result->num_rows > 0) {
-        while ($row = $result->fetch_assoc()) {
-            echo "<tr>";
-            echo "<td>" . $row['serial_number'] . "</td>";
-            echo "<td>" . $row['company'] . "</td>";
-            echo "<td>" . $row['color_code'] . "</td>";
-            echo "<td>" . $row['batch_code'] . "</td>";
-            echo "<td>" . $row['bar_code'] . "</td>";
-            echo "<td>" . $row['issue_time'] . "</td>";
-            echo "<td>" . $row['used_time'] . "</td>";
-            echo "<td>" . ($row['issued'] ? 'Yes' : 'No') . "</td>";
-            echo "<td>" . ($row['used'] ? 'Yes' : 'No') . "</td>";
-            echo "<td>" . $row['count'] . "</td>";
-            echo "</tr>";
+        <tbody>
+        <?php
+        switch($datetype) {
+          case "issue_time":
+              $sql = "SELECT * FROM band WHERE issue_time BETWEEN ? AND ?";
+              break;
+          case "fo_issue_time":
+              $sql = "SELECT * FROM band WHERE fo_issue_time BETWEEN ? AND ?";
+              break;
+          case "used_time":
+              $sql = "SELECT * FROM band WHERE used_time BETWEEN ? AND ?";
+              break;
+          default:
+              $sql = "SELECT * FROM band WHERE issue_time BETWEEN ? AND ?";
+      }
+            $update_sql = "SELECT * FROM `band` WHERE `bar_code` = ? AND fo_issued = TRUE";
+            $update_stmt = $conn->prepare($update_sql);
+            $update_stmt->bind_param("ss", $start_datetime, $end_datetime);
+            $update_stmt->execute();
+            $result = $update_stmt->get_result();
+            $row_count = $result->num_rows;
+        $row = $result->fetch_assoc();
+        if ($row_count > 0) {
+            $count = $row["count"];
+            $count++;
+                echo "<table style='background-color: white; text-align: center;'>";
+                echo "<thead>";
+                echo "<tr>";
+                echo "<th>Serial Number</th>";
+                echo "<th>Barcode</th>";
+                echo "<th>FO Issued</th>";
+                echo "</tr>";
+                echo "</thead>";
+                echo "<tbody>";
+                echo "<tr style='text-align: center; '>";
+                echo "<td style='text-align: center;'>" . $row['serial_number'] . "</td>";
+                echo "<td style='text-align: center;'>" . $row['bar_code'] . "</td>";
+                echo "<td style='text-align: center;'>" . $row['fo_issue_time'] . "</td>";
+                echo "</tr>";
+                echo "</tbody>";
+                echo "</table>";
+           
         }
-    } else {
-        echo "<tr><td colspan='10'>No records found</td></tr>";
-    }
-}
+        $update_stmt->close();
+        ?>
 
-
-    ?>
-
-<!-- </tbody>
-    </table> -->
-    <div class="pagination">
-    <!-- <?php
+<div class="pagination">
+   <!-- <?php
     $total_records = mysqli_num_rows($result);
     $total_pages = ceil($total_records / $num_records_per_page);
     for($i=1;$i<=$total_pages;$i++)
     {
-        echo "<a href='?page=".$i."'>".$i."</a>";
+        // echo "<a href='?page=".$i."'>".$i."</a>";
     }
     ?> -->
     </div>
-
     <script>
-        document.getElementById("generateReportBtn").addEventListener("click", function(event) {
-            event.preventDefault();
-            var xhr = new XMLHttpRequest();
-            xhr.open("POST", "excelout.php", true);
-            xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-            xhr.responseType = "blob"; // Set response type to blob
+    document.getElementById("generateReportBtn").addEventListener("click", function(event) {
+        event.preventDefault();
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "generatereport.php", true);
+        xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xhr.responseType = "blob"; // Set response type to blob
 
-            xhr.onload = function() {
-                if (this.status === 200) {
-                    var a = document.createElement("a");
-                    var url = window.URL.createObjectURL(this.response);
-                    a.href = url;
-                    a.download = "band_data_report.csv"; // Set filename
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                }
-            };
-
-            // Serialize form data
-            var formData = new FormData(document.getElementById("reportForm"));
-            var serialized = "";
-            for (var [key, value] of formData.entries()) {
-                serialized += key + "=" + value + "&";
+        xhr.onload = function() {
+            if (this.status === 200) {
+                var a = document.createElement("a");
+                var url = window.URL.createObjectURL(this.response);
+                a.href = url;
+                a.download = "band_data_report.csv"; // Set filename
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
             }
+        };
 
-            // Remove the last "&" character
-            serialized = serialized.slice(0, -1);
+        // Serialize form data
+        var formData = new FormData(document.getElementById("reportForm"));
+        var serialized = "";
+        for (var [key, value] of formData.entries()) {
+            serialized += key + "=" + value + "&";
+        }
 
-            // Send AJAX request with form data
-            xhr.send(serialized);
-        });
-    </script>
+        // Remove the last "&" character
+        serialized = serialized.slice(0, -1);
+
+        // Send AJAX request with form data
+        xhr.send(serialized);
+    });
+</script>
+
 </body>
 </html>
+
+<?php
+if ($stmt) {
+    $stmt->close();
+}
+$conn->close();
+?>
