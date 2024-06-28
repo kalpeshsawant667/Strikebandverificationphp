@@ -140,7 +140,7 @@ function togglePassword() {
                 <div>
                     <img src="./images/logo.png" width="100px" height="100px" class="img" style="padding-left: 500px;">
                 </div>
-                <h2 class="heading-section">Big Daddy Bands</h2>
+                <h2 class="heading-section">Strike By Big Daddy</h2>
             </div>
         </div>
         <div class="row justify-content-center">

@@ -39,7 +39,7 @@ function playAudio($audioSrc) {
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $barcode = isset($_POST['barcode']) ? $_POST['barcode'] : null;
     if ($barcode !== null) {
-        $sql = "SELECT * FROM `band` WHERE `bar_code` = ? AND `fo_issued` = TRUE";
+        $sql = "SELECT bar_code FROM band WHERE bar_code = ? AND `fo_issued` = TRUE";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $barcode);
         $stmt->execute();

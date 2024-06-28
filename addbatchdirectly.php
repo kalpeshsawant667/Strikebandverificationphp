@@ -31,7 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $insert_sql = "INSERT INTO `band`(`company`, `color_code`, `batch_code`, `letter`, `bar_code`, `issue_time`, `issued`) 
                    VALUES (?, ?, ?, ?, ?, ?, ?)";
-    $check_sql = "SELECT * FROM `band` WHERE `bar_code` = ?";
+    $check_sql = "SELECT bar_code FROM band WHERE bar_code = ?";
 
     $company = substr($bar_code, 0, 2);
     $color_code = substr($bar_code, 2, 3);

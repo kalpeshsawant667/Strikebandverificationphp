@@ -29,7 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $remark = $_POST["remark"];
     $reissueremark = 'reissued ' . $remark; // Use single quotes instead of backticks
 
-    $sql = "SELECT * FROM `band` WHERE `bar_code` = ? AND voiditem != true";
+    $sql = "SELECT bar_code FROM band WHERE bar_code = ? AND voiditem != true";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $barcode);
     

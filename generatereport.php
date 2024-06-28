@@ -360,7 +360,7 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
           default:
               $sql = "SELECT * FROM band WHERE issue_time BETWEEN ? AND ?";
       }
-            $update_sql = "SELECT * FROM `band` WHERE `bar_code` = ? AND fo_issued = TRUE";
+            $update_sql = "SELECT bar_code FROM band WHERE bar_code = ? AND fo_issued = TRUE";
             $update_stmt = $conn->prepare($update_sql);
             $update_stmt->bind_param("ss", $start_datetime, $end_datetime);
             $update_stmt->execute();

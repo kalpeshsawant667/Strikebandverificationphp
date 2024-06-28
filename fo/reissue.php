@@ -22,7 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $reissueremark = `reissued `.$remark;
 
 
-    $sql = "SELECT * FROM `band` WHERE `bar_code` = ? AND voiditem != true";
+    $sql = "SELECT bar_code FROM band WHERE bar_code = ? AND voiditem != true";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $barcode);
     
