@@ -11,7 +11,18 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-function parseDate($dateString, $dateFormats, $timezone) {
+
+/**
+ * Parses a date string using multiple formats and a timezone.
+ *
+ * @param string $dateString The date string to parse.
+ * @param array $dateFormats The date formats to try.
+ * @param DateTimeZone $timezone The timezone to use.S
+ *
+ * @return DateTime|false The parsed DateTime object or false on failure.
+ */
+function parseDate($dateString, $dateFormats, $timezone)
+{
     foreach ($dateFormats as $dateFormat) {
         $date = DateTime::createFromFormat($dateFormat, $dateString, $timezone);
         if ($date) {
@@ -21,25 +32,11 @@ function parseDate($dateString, $dateFormats, $timezone) {
     return false;
 }
 
-function displayMessage($backgroundColor, $fontSize, $message) {
-    echo "<div style='background-color: $backgroundColor; text-align: center; font-size: $fontSize; color: black'>$message</div>";
-}
-
-function playAudio($audioSrc) {
-    echo "<script>
-            var audio = document.createElement('audio');
-            document.body.appendChild(audio);
-            audio.src = '$audioSrc';
-            audio.addEventListener('canplaythrough', function() { 
-                audio.play();
-            }, false);
-          </script>";
-}
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $barcode = isset($_POST['barcode']) ? $_POST['barcode'] : null;
     if ($barcode !== null) {
-        $sql = "SELECT bar_code FROM band WHERE bar_code = ? AND `fo_issued` = TRUE";
+        $sql = "SELECT * FROM `band` WHERE `bar_code` = ? AND `fo_issued` = TRUE";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $barcode);
         $stmt->execute();
@@ -57,7 +54,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if (!$fo_issue_time) {
                 $fo_issue_time = DateTime::createFromFormat('Y-m-d H:i:s', $fo_issue_time_str, $timezone);
                 if (!$fo_issue_time) {
-                    echo "Error parsing date: " . htmlspecialchars($fo_issue_time_str);
+                    echo "Error parsing date: " . $fo_issue_time_str;
                     return false;
                 }
             }
@@ -82,7 +79,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     echo "</thead>";
                     echo "<tbody>";
                     echo "<tr>";
-                    echo "<td style='font-size:2rem'><b>" . htmlspecialchars($fo_issue_time->format('d/m/Y H:i')) . "</b></td>";
+                    echo "<td style='font-size:2rem'><b>" . $fo_issue_time->format('d/m/Y H:i') . "</b></td>";
                     echo "<td style='font-size:2rem'><b>";
                     echo " Minutes: " . $interval->format('%I');
                     echo ":" . $interval->format('%S');
@@ -106,35 +103,70 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             throw new Exception("Error: used_time is null.");
                         }
                     } catch (Exception $e) {
-                        echo htmlspecialchars($e->getMessage());
+                        echo $e->getMessage();
                     }
 
-                    $backgroundColor = 'yellow';
-                    $update_sql = "UPDATE `band` SET `count` = ? WHERE `bar_code` = ?";
-                    echo "<div style='background-color: yellow; text-align: center; font-size: 4rem;color: black; padding-left: 100px'>Band has already been used! Count: $count.</div>";
-                    echo "<div class='tabledisplay'>";
-                    echo "<h2>Band Details</h2>";
-                    echo "<table>";
-                    echo "<thead>";
-                    echo "<tr>";
-                    echo "<th>FO Issued</th>";
-                    echo "<th>Used Time</th>";
-                    echo "<th>Time Elapsed</th>";
-                    echo "</tr>";
-                    echo "</thead>";
-                    echo "<tbody>";
-                    echo "<tr>";
-                    echo "<td style='font-size:2rem'><b>" . htmlspecialchars($fo_issue_time->format('d/m/Y H:i')) . "</b></td>";
-                    echo "<td style='font-size:2rem'><b>" . htmlspecialchars($row['used_time']) . "</b></td>";
-                    echo "<td style='font-size:2rem'><b>";
-                    echo " Minutes: " . $interval->format('%I');
-                    echo ":" . $interval->format('%S');
-                    echo "</b></td>";
-                    echo "</tr>";
-                    echo "</tbody>";
-                    echo "</table>";
-                    echo "</div>";
-                    playAudio('../Audio/beepalert_aeobLVzA.mp3');
+                    // if ($elapsed_seconds < 10) {
+                    //     $backgroundColor = 'green';
+                    //     $update_sql = "UPDATE `band` SET `count` = ? WHERE `bar_code` = ?";
+                    //     echo "<div style='background-color: red; text-align: center; font-size: 2rem;color: white'>Band has already been used! Count: $count</div>";
+                    //     echo "<div class='tabledisplay'>";
+                    //     echo "<h2>Band Details</h2>";
+                    //     echo "<table>";
+                    //     echo "<thead>";
+                    //     echo "<tr>";
+                    //     echo "<th>FO Issued</th>";
+                    //     echo "<th>Used Time</th>";
+                    //     echo "<th>Time Elapsed</th>";
+                    //     echo "</tr>";
+                    //     echo "</thead>";
+                    //     echo "<tbody>";
+                    //     echo "<tr>";
+                    //     echo "<td>" . $fo_issue_time->format('d/m/Y H:i') . "</td>";
+                    //     echo "<td>" . $used_time->format('d/m/Y H:i') . "</td>";
+                    //     echo "<td>";
+                    //     echo " - Minutes: " . $interval->format('%I');
+                    //     echo ":" . $interval->format('%S');
+                    //     echo "</td>";                    
+                    //     echo "</tr>";
+                    //     echo "</tbody>";
+                    //     echo "</table>";
+                    //     echo "</div>";
+                    // } else {
+                        $backgroundColor = 'yellow';
+                        $update_sql = "UPDATE `band` SET `count` = ? WHERE `bar_code` = ?";
+                        echo "<div style='background-color: yellow; text-align: center; font-size: 4rem;color: black; padding-left: 100px'>Band has already been used! Count: $count.</div>";
+                        echo "<div class='tabledisplay'>";
+                        echo "<h2>Band Details</h2>";
+                        echo "<table>";
+                        echo "<thead>";
+                        echo "<tr>";
+                        echo "<th>FO Issued</th>";
+                        echo "<th>Used Time</th>";
+                        echo "<th>Time Elapsed</th>";
+                        echo "</tr>";
+                        echo "</thead>";
+                        echo "<tbody>";
+                        echo "<tr>";
+                        echo "<td style='font-size:2rem'><b>" . $fo_issue_time->format('d/m/Y H:i') . "</b></td>";
+                        echo "<td style='font-size:2rem'><b>" . $row['used_time'] . "</b></td>";
+                        echo "<td style='font-size:2rem'><b>";
+                        echo " Minutes: " . $interval->format('%I');
+                        echo ":" . $interval->format('%S');
+                        echo "</b></td>";
+                        echo "</tr>";
+                        echo "</tbody>";
+                        echo "</table>";
+                        echo "</div>";
+                        echo " <script> var audio = document.createElement('audio');
+                                document.body.appendChild(audio);
+                                audio.src = '../Audio/beepalert_aeobLVzA.mp3';
+                                audio.addEventListener('canplaythrough', function() { 
+                                audio.play();
+                                //   audio.pause();
+                                }, false);
+                            </script>";
+                    //}
                 }
                 $update_stmt = $conn->prepare($update_sql);
                 $update_stmt->bind_param("is", $count, $barcode);
@@ -142,7 +174,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $update_stmt->close();
             } else {
                 $backgroundColor = 'red';
-                displayMessage('red', '2rem', 'FO Issue time has expired! Cannot use this band.');
+                echo "<div style='background-color: red; text-align: center; font-size: 2rem;color: white; padding-left: 100px'>FO Issue time has expired! Cannot use this band.</div>";
                 echo "<div class='tabledisplay'>";
                 echo "<h2>Band Details</h2>";
                 echo "<table>";
@@ -154,7 +186,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo "</thead>";
                 echo "<tbody>";
                 echo "<tr>";
-                echo "<td style='font-size:2rem'><b>" . htmlspecialchars($fo_issue_time->format('d/m/Y H:i')) . "</b></td>";
+                echo "<td style='font-size:2rem'><b>" . $fo_issue_time->format('d/m/Y H:i') . "</b></td>";
                 echo "<td style='font-size:2rem'><b>";
                 echo " Hours: " . $interval->format('%H');
                 echo " Minutes: " . $interval->format('%I');
@@ -164,31 +196,68 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo "</tbody>";
                 echo "</table>";
                 echo "</div>";
-                playAudio('../Audio/beepalert_aeobLVzA.mp3');
+                
+            echo " <script> var audio = document.createElement('audio');
+                    document.body.appendChild(audio);
+                    audio.src = '../Audio/afterexplosionbeep_Pcn6DM5v.mp3';
+                    audio.addEventListener('canplaythrough', function() { 
+                    audio.play();
+                    //   audio.pause();
+                    }, false);
+                </script>";
             }
-            $stmt->close();
         } else {
-            $backgroundColor = 'red';
-            displayMessage('red', '4rem', 'INVALID BAND. NOT ISSUED');
-            playAudio('../Audio/beepalert_aeobLVzA.mp3');
+            $backgroundColor = 'red'; 
+            echo "<div style='background-color: red; text-align: center; font-size: 5rem; color: black'>BAND NOT FOUND.</div>";
+            
+            echo " <script>
+            var audio = document.createElement('audio');
+            document.body.appendChild(audio);
+            audio.src = '../Audio/afterexplosionbeep_Pcn6DM5v.mp3';
+            audio.addEventListener('canplaythrough', function() {
+              audio.play();
+            }, false);
+          </script>
+          ";
         }
 
-        if (isset($_SESSION['user_id'])) {
-            $user_id = $_SESSION['user_id'];
-            $log_sql = "INSERT INTO logs (user_id, action, timestamp) VALUES (?, ?, NOW())";
-            $log_stmt = $conn->prepare($log_sql);
-            $log_stmt->bind_param("is", $user_id, $barcode);
-            $log_stmt->execute();
-            $log_stmt->close();
-        }
+        $stmt->close();
     } else {
-        $backgroundColor = 'red';
-        displayMessage('red', '4rem', 'Barcode is required.');
-        playAudio('../Audio/beepalert_aeobLVzA.mp3');
+        $backgroundColor = 'red'; 
+        echo "<div style='background-color: red; text-align: center; font-size: 5rem; color: black'>No barcode provided.</div>";
+        echo " <script>
+            var audio = document.createElement('audio');
+            document.body.appendChild(audio);
+            audio.src = '../Audio/afterexplosionbeep_Pcn6DM5v.mp3';
+            audio.addEventListener('canplaythrough', function() {
+              audio.play();
+            }, false);
+          </script>
+          ";
+    }
+    if (isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
+        $log = "INSERT INTO user_log (page, username, log_action, user_id) VALUES (?, ?, ?, ?)";
+        $logstmt = $conn->prepare($log);
+        if (!$logstmt) {
+            die("Prepare failed: " . $conn->error);
+        }
+        $page = "security";
+        $username = $_SESSION["username"];
+        $log_action = "security scanned barcode: $barcode of guest";
+        $user_id = $_SESSION["empid"];
+        $logstmt->bind_param("sssi", $page, $username, $log_action, $user_id);
+        $logstmt->execute();
+        $logstmt->close();
+    } else {
+        echo "User not logged in.";
     }
 }
+
+
+
 $conn->close();
 ?>
+
 
 <!DOCTYPE html>
 <html>

@@ -14,14 +14,14 @@ if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > 
     session_unset();     
     session_destroy();  
     echo '<script>alert("You have Been looged out.")</script>';
-    header("Location: ../logout.php");
+    header("Location: logout.php");
   }
   $_SESSION['LAST_ACTIVITY'] = time();
   $username = $_SESSION["username"];
   if($username == null)
   {
       echo '<script>alert("You have Been looged out.")</script>';
-      header("Location: ../logout.php");
+      header("Location: logout.php");
   }
   set_time_limit(500);
   date_default_timezone_set('Asia/Kolkata');
@@ -87,7 +87,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $logstmt->bind_param("sssi", $page, $username, $log_action, $user_id);
         $logstmt->execute();
       } else {
-        echo "Session variables are not set.";
+       //echo "Session variables are not set.";
       }
     }
 
@@ -105,7 +105,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $logstmt->bind_param("sssi", $page, $username, $log_action, $user_id);
         $logstmt->execute();
       } else {
-        echo "Session variables are not set.";
+       //echo "Session variables are not set.";
       }
     if (isset($stmt)) $stmt->close();
     if (isset($check_stmt)) $check_stmt->close();
@@ -288,7 +288,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div class="dropdown" id="profileDropdown">
                     <a href="#"><?php echo $username; ?></a>
                     <a href="changepassword.php">Change Password</a>
-                    <a href="../logout.php">Logout</a>
+                    <a href="logout.php">Logout</a>
                 </div>
             </div>
     <form class="formclass" action="addbatchdirectly.php" method="post">

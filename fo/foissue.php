@@ -15,8 +15,8 @@ if($username == null)
 {
     echo '<script>alert("You have Been looged out.")</script>';
     header("Location: ../logout.php");
+    exit();
 }
-
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $barcode = isset($_POST['barcode']) ? $_POST['barcode'] : null;
@@ -24,7 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($barcode !== null) {
         $username = $_SESSION["username"];
 
-        $checksql = "SELECT * FROM band WHERE `bar_code` = ?";
+        $checksql = "SELECT bar_code, fo_issued FROM band WHERE `bar_code` = ?";
         $stmt = $conn->prepare($checksql);
         $stmt->bind_param("s", $barcode);
         $stmt->execute();
@@ -32,7 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         if ($result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
-                if (!$row['fo_issued']) {
+                if (!isset($row['fo_issued']) || !$row['fo_issued']) {
                     $sql = "UPDATE `band` SET `fo_issue_time` = CURRENT_TIMESTAMP(), `fo_issued` = true, `fo_user` = ? WHERE `bar_code` = ?";
                     $update_stmt = $conn->prepare($sql);
 
@@ -43,30 +43,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         $backgroundColor = 'green';
                         echo "<div style='background-color: green; text-align: center; font-size: 5rem; color: white'>Band issued successfully $barcode</div>";
                     } else {
-                        // Change background color to red
                         $backgroundColor = 'red';
                         echo "<div style='background-color: red; text-align: center; font-size: 5rem; color: black'>Failed to issue band</div>";
                     }
                 } else {
-                    // Change background color to red
                     $backgroundColor = 'red';
                     echo "<div style='background-color: red; text-align: center; font-size: 5rem; color: black'>Band already issued $barcode</div>";
                     echo "<script>document.getElementById('barcode').focus();</script>";
                 }
             }
         } else {
-            // Change background color to red
             $backgroundColor = 'red';
             echo "<div style='background-color: red; text-align: center; font-size: 5rem; color: black'>Barcode not found.</div>";
         }
 
-        // Close the result set
         $result->close();
     } else {
-        // Change background color to red
         $backgroundColor = 'red';
         echo "<div style='background-color: red; text-align: center; font-size: 5rem; color: black'>No Barcode</div>";
     }
+
     if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
         $log = "INSERT INTO user_log (page, username, log_action, user_id) VALUES (?, ?, ?, ?)";
         $logstmt = $conn->prepare($log);
@@ -79,11 +75,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $user_id = $_SESSION["empid"];
         $logstmt->bind_param("sssi", $page, $username, $log_action, $user_id);
         $logstmt->execute();
-    } else {
-        echo "Session variables are not set.";
     }
 }
-
 
 $conn->close();
 ?>
@@ -128,7 +121,6 @@ $conn->close();
             border-radius: 3px;
             cursor: pointer;
         }
-        /* Fixed sidenav, full height */
         .sidenav {
             height: 100%;
             width: 200px;
@@ -157,8 +149,8 @@ $conn->close();
             color: #f1f1f1;
         }
         .main {
-            margin-left: 200px; /* Same as the width of the sidenav */
-            font-size: 20px; /* Increased text to enable scrolling */
+            margin-left: 200px;
+            font-size: 20px;
             padding: 0px 10px;
         }
         .active {
@@ -193,46 +185,44 @@ $conn->close();
             margin-left: 25%;
         }
         .profile {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  display: flex;
-  align-items: center;
-  margin-left: 90%;
-}
-
-.profile img {
-  border-radius: 50%;
-  cursor: pointer;
-  height: 50px;
-  width: 50px;
-}
-
-.profile .dropdown {
-  display: none;
-  position: absolute;
-  right: 0;
-  background-color: #f9f9f9;
-  min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-  z-index: 1;
-}
-         .profile .dropdown a {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin-left: 90%;
+        }
+        .profile img {
+            border-radius: 50%;
+            cursor: pointer;
+            height: 50px;
+            width: 50px;
+        }
+        .profile .dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+        .profile .dropdown a {
             color: black;
             padding: 12px 16px;
             text-decoration: none;
             display: block;
         }
-         .profile .dropdown a:hover {
-            background-color: #f1f1f1
-        }
-         .profile:hover .dropdown {
-            display: block;
-        }
-         .profile .dropdown a:hover {
+        .profile .dropdown a:hover {
             background-color: #f1f1f1;
         }
-         .profile .dropdown .show {
+        .profile:hover .dropdown {
+            display: block;
+        }
+        .profile .dropdown a:hover {
+            background-color: #f1f1f1;
+        }
+        .profile .dropdown .show {
             display: block;
         }
 
@@ -242,14 +232,13 @@ $conn->close();
         }
     </style>
 </head>  
-<body onload=`document.barcode.focus();`>
+<body onload="document.getElementById('barcode').focus();">
 <div class="sidenav">
   <h1 style="background-color:rgb(231, 239, 240);">FO</h1>
     <a href="foissue.php">Front Office</a>
     <a href="datatablesoutput.php">Datatable Output</a>
     <a href="voiditem.php">Void band</a>
     <a href="reissue.php">Reissue band</a>
-    <!-- <a href="generatereport.php">generate report</a> -->
     <a href="changepassword.php">Change Password</a>
     <a href="../logout.php">Logout</a>
   </div>
@@ -260,25 +249,25 @@ $conn->close();
         const dropdown = document.getElementById("profileDropdown");
         dropdown.classList.toggle("show");
       }
-  </script>
-  <div class="profile">
-              <img src="../images/user.png" alt="Profile Image" onclick="toggleDropdown()">
-              <p><?php echo $username; ?></p>
-                <div class="dropdown" id="profileDropdown">
-                    <a href="#"><?php echo $username; ?></a>
-                    <a href="changepassword.php">Change Password</a>
-                    <a href="../logout.php">Logout</a>
-                </div>
-            </div>
-
-    <div class="container">
-        <h2 style="color: white;">Scan Barcode</h2>
-        <form action="foissue.php" method="post">
-            <label  class="barcodelabel" for="barcode">Enter Barcode:</label>
-            <input type="text" id="barcode" name="barcode" class="barcode" required><br><br>
-            <input class="button" type="submit" value="Scan">
-        </form>
+</script>
+<div class="profile">
+    <img src="../images/user.png" alt="Profile Image" onclick="toggleDropdown()">
+    <p><?php echo $username; ?></p>
+    <div class="dropdown" id="profileDropdown">
+        <a href="#"><?php echo $username; ?></a>
+        <a href="changepassword.php">Change Password</a>
+        <a href="../logout.php">Logout</a>
     </div>
+</div>
+
+<div class="container">
+    <h2 style="color: white;">Scan Barcode</h2>
+    <form action="foissue.php" method="post">
+        <label class="barcodelabel" for="barcode">Enter Barcode:</label>
+        <input type="text" id="barcode" name="barcode" class="barcode" required><br><br>
+        <input class="button" type="submit" value="Scan">
+    </form>
+</div>
 </div>
 <script>
     const inputField = document.getElementById("barcode");

@@ -22,7 +22,7 @@ if (isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
     $_SESSION = array();
     session_destroy();
 } else {
-    echo "Session variables are not set.";
+   //echo "Session variables are not set.";
 }
 
 if (isset($conn)) {

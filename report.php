@@ -200,7 +200,7 @@ $stmt = null;
         </thead>
         <tbody>
             <?php
-            $sql = "SELECT * FROM band WHERE voiditem != true AND issue_time BETWEEN ? AND ?";
+            $sql = "SELECT bar_code FROM band WHERE voiditem != true AND issue_time BETWEEN ? AND ?";
             if(isset($_POST["start_date"]) && isset($_POST["end_date"]) && isset($_POST["datetype"])) {
               $start_date = $_POST["start_date"];
               $start_time = $_POST["start_time"];
@@ -212,16 +212,16 @@ $stmt = null;
               
               switch($datetype) {
                   case "issue_time":
-                      $sql = "SELECT * FROM band WHERE voiditem != true AND issue_time BETWEEN ? AND ?";
+                      $sql = "SELECT bar_code FROM band WHERE voiditem != true AND issue_time BETWEEN ? AND ?";
                       break;
                   case "fo_issue_time":
-                      $sql = "SELECT * FROM band WHERE voiditem != true AND fo_issue_time BETWEEN ? AND ?";
+                      $sql = "SELECT bar_code FROM band WHERE voiditem != true AND fo_issue_time BETWEEN ? AND ?";
                       break;
                   case "used_time":
-                      $sql = "SELECT * FROM band WHERE voiditem != true AND used_time BETWEEN ? AND ?";
+                      $sql = "SELECT bar_code FROM band WHERE voiditem != true AND used_time BETWEEN ? AND ?";
                       break;
                   default:
-                      $sql = "SELECT * FROM band WHERE voiditem != true AND issue_time BETWEEN ? AND ?";
+                      $sql = "SELECT bar_code FROM band WHERE voiditem != true AND issue_time BETWEEN ? AND ?";
               }
               $stmt = $conn->prepare($sql);
               $stmt->bind_param("ss", $start_datetime, $end_datetime);

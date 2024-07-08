@@ -5,7 +5,6 @@ $dbusername = "root";
 $dbpassword = "";
 $database = "strikebandbarcode";
 $conn = new mysqli($servername, $dbusername, $dbpassword, $database);
-
 $backgroundColor= 'green';
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
@@ -14,17 +13,15 @@ if ($conn->connect_error) {
 if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > 1800)) {
   session_unset();     
   session_destroy();  
-  echo '<script>alert("You have been logged out.")</script>';
+  echo '<script>alert("You have Been looged out.")</script>';
   header("Location: ../logout.php");
-  exit();
 }
 $_SESSION['LAST_ACTIVITY'] = time();
 $username = $_SESSION["username"];
 if($username == null)
 {
-    echo '<script>alert("You have been logged out.")</script>';
+    echo '<script>alert("You have Been looged out.")</script>';
     header("Location: ../logout.php");
-    exit();
 }
 set_time_limit(500);
 date_default_timezone_set('Asia/Kolkata');
@@ -81,22 +78,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["csv_file"])) {
       echo "Error opening file.";
   }  
 
-  if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
+    if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
       $log = "INSERT INTO user_log (page, username, log_action, user_id) VALUES (?, ?, ?, ?)";
       $logstmt = $conn->prepare($log);
       if (!$logstmt) {
-          die("Prepare failed: " . $conn->error);
-      }
+        die("Prepare failed: " . $conn->error);
+    }
       $page = "addproductdirectlybarcode";
       $username =  $_SESSION["username"];
       $log_action = "user added barcode csv file directly";
       $user_id = $_SESSION["empid"];
       $logstmt->bind_param("sssi", $page, $username, $log_action, $user_id);
       $logstmt->execute();
-  } else {
-      echo "Session variables are not set.";
-  }
-  $conn->close();
+    } else {
+     //echo "Session variables are not set.";
+    }
+    $conn->close();
 }
 ?>
 

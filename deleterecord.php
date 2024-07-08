@@ -237,7 +237,7 @@ $error="";
     <!-- <a href="addproduct.php">Add Product</a> -->
     <a href="addbarcodedirectly.php">Add Barcode</a>
     <a href="addbatchdirectly.php">Add Batch Directly</a>
-    <a href="addbatchdirectlyall.php">Add Batch All Directly</a>
+    <!-- <a href="addbatchdirectlyall.php">Add Batch All Directly</a>-->
     <a href="addproductdirectly.php">Add barcode Directly</a>
     <a href="foissue.php">Front Office</a>
     <a href="foonboard.php">Band Update onboard</a>
@@ -300,7 +300,7 @@ $error="";
         </thead>
         <tbody>
             <?php
-            $sql = "SELECT * FROM band";
+            $sql = "SELECT bar_code FROM band";
             $result = $conn->query($sql);
             
             if ($result->num_rows > 0) {

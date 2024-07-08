@@ -5,7 +5,6 @@ $dbusername = "root";
 $dbpassword = "";
 $database = "strikebandbarcode";
 $conn = new mysqli($servername, $dbusername, $dbpassword, $database);
-
 $backgroundColor= 'green';
 
 if ($conn->connect_error) {

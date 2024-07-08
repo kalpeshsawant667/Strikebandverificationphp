@@ -12,11 +12,25 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
+if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > 1800)) {
+  session_unset();     
+  session_destroy();  
+  echo '<script>alert("You have Been looged out.")</script>';
+  header("Location: logout.php");
+}
+$_SESSION['LAST_ACTIVITY'] = time();
+if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > 1800)) {
+  session_unset();     
+  session_destroy();
+  echo '<script>alert("You have Been looged out.")</script>';
+  header("Location: logout.php");
+}
+$_SESSION['LAST_ACTIVITY'] = time();
 $username = $_SESSION["username"];
 if($username == null)
 {
     echo '<script>alert("You have Been looged out.")</script>';
-    header("Location: ../logout.php");
+    header("Location: logout.php");
 }
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 

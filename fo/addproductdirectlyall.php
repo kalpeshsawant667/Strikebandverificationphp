@@ -78,7 +78,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["csv_file"])) {
     //   $logstmt->bind_param("sssi", $page, $username, $log_action, $user_id);
     //   $logstmt->execute();
     // } else {
-    //   echo "Session variables are not set.";
+    //  //echo "Session variables are not set.";
     // }
     // Close database connection
     $conn->close();

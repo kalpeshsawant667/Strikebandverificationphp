@@ -47,7 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["csv_file"])) {
           $issue_time = date('Y-m-d H:i:s');
           $issued = 1;
   
-          $sql = "SELECT * FROM band WHERE bar_code = ?";
+          $sql = "SELECT bar_code FROM band WHERE bar_code = ?";
           $stmt = $conn->prepare($sql);
           $stmt->bind_param("s", $bar_code);
           $stmt->execute();
@@ -91,7 +91,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["csv_file"])) {
       $logstmt->bind_param("sssi", $page, $username, $log_action, $user_id);
       $logstmt->execute();
     } else {
-      echo "Session variables are not set.";
+     //echo "Session variables are not set.";
     }
     $conn->close();
 }

@@ -40,16 +40,16 @@ if(isset($_POST["start_date"]) && isset($_POST["end_date"]) && isset($_POST["dat
     
     switch($datetype) {
         case "issue_time":
-            $sql = "SELECT * FROM band WHERE issue_time BETWEEN ? AND ?";
+            $sql = "SELECT bar_code FROM band WHERE issue_time BETWEEN ? AND ?";
             break;
         case "fo_issue_time":
-            $sql = "SELECT * FROM band WHERE fo_issue_time BETWEEN ? AND ?";
+            $sql = "SELECT bar_code FROM band WHERE fo_issue_time BETWEEN ? AND ?";
             break;
         case "used_time":
-            $sql = "SELECT * FROM band WHERE used_time BETWEEN ? AND ?";
+            $sql = "SELECT bar_code FROM band WHERE used_time BETWEEN ? AND ?";
             break;
         default:
-            $sql = "SELECT * FROM band WHERE issue_time BETWEEN ? AND ?";
+            $sql = "SELECT bar_code FROM band WHERE issue_time BETWEEN ? AND ?";
     }
     
     $stmt = $conn->prepare($sql);
@@ -96,7 +96,7 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
     $logstmt->bind_param("sssi", $page, $username, $log_action, $user_id);
     $logstmt->execute();
   } else {
-    echo "Session variables are not set.";
+   //echo "Session variables are not set.";
   }
 ?>
 
@@ -280,7 +280,7 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
     <!-- <a href="addproduct.php">Add Product</a> -->
     <a href="addbarcodedirectly.php">Add Barcode</a>
     <a href="addbatchdirectly.php">Add Batch Directly</a>
-    <a href="addbatchdirectlyall.php">Add Batch All Directly</a>
+    <!-- <a href="addbatchdirectlyall.php">Add Batch All Directly</a>-->
     <a href="addproductdirectly.php">Add barcode Directly</a>
     <a href="foissue.php">Front Office</a>
     <a href="foonboard.php">Band Update onboard</a>
@@ -349,16 +349,16 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
         <?php
         switch($datetype) {
           case "issue_time":
-              $sql = "SELECT * FROM band WHERE issue_time BETWEEN ? AND ?";
+              $sql = "SELECT bar_code FROM band WHERE issue_time BETWEEN ? AND ?";
               break;
           case "fo_issue_time":
-              $sql = "SELECT * FROM band WHERE fo_issue_time BETWEEN ? AND ?";
+              $sql = "SELECT bar_code FROM band WHERE fo_issue_time BETWEEN ? AND ?";
               break;
           case "used_time":
-              $sql = "SELECT * FROM band WHERE used_time BETWEEN ? AND ?";
+              $sql = "SELECT bar_code FROM band WHERE used_time BETWEEN ? AND ?";
               break;
           default:
-              $sql = "SELECT * FROM band WHERE issue_time BETWEEN ? AND ?";
+              $sql = "SELECT bar_code FROM band WHERE issue_time BETWEEN ? AND ?";
       }
             $update_sql = "SELECT bar_code FROM band WHERE bar_code = ? AND fo_issued = TRUE";
             $update_stmt = $conn->prepare($update_sql);

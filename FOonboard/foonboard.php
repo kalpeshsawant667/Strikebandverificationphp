@@ -31,18 +31,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($barcode !== null && $upgradebarcode !== null) {
         if ($barcode != $upgradebarcode) {
             $username = $_SESSION["username"];
-                $checksql = "SELECT * FROM band WHERE `bar_code` = ? && `fo_issued` = true && voiditem != true";
+                $checksql = "SELECT bar_code FROM band WHERE `bar_code` = ? && `fo_issued` = true && voiditem != true";
                 $stmt = $conn->prepare($checksql);
                 $stmt->bind_param("s", $barcode);
                 $stmt->execute();
                 $result = $stmt->get_result();
                 if ($result->num_rows > 0) {
-                    $checkupdatesql = "SELECT * FROM band WHERE `bar_code` = ? AND voiditem != true AND `fo_issued` != true";
+                    $checkupdatesql = "SELECT bar_code FROM band WHERE `bar_code` = ? AND voiditem != true AND `fo_issued` != true";
                     $updatestmt = $conn->prepare($checkupdatesql);
                     $updatestmt->bind_param("s", $upgradebarcode);
                     $updatestmt->execute();
                     $upgraderesult = $updatestmt->get_result();
-                    if ($upgraderesult->num_rows > 0) {
                     while ($row = $result->fetch_assoc()) {
 
                         try {
@@ -68,10 +67,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         $backgroundColor = 'green';
                         echo "<div style='background-color: green; text-align: center; font-size: 5rem; color: white'>Band issued successfully `$upgradebarcode`</div>";
                     }
-                } else {
-                    $backgroundColor = 'red';
-                    echo "<div style='background-color: red; text-align: center; font-size: 5rem; color: black'>Upgrading Band not found.</div>";
-                }
                 $upgraderesult->close();
             } else {
                 $backgroundColor = 'red';
@@ -109,7 +104,7 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
     $logstmt->bind_param("sssi", $page, $username, $log_action, $user_id);
     $logstmt->execute();
 } else {
-    echo "Session variables are not set.";
+   //echo "Session variables are not set.";
 }
 
 $conn->close();

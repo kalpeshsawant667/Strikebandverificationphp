@@ -31,7 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $username = $_SESSION["username"];
 
         // Check if the barcode exists in the database
-        $checksql = "SELECT * FROM band WHERE `bar_code` = ?";
+        $checksql = "SELECT bar_code FROM band WHERE `bar_code` = ?";
         $stmt = $conn->prepare($checksql);
         $stmt->bind_param("s", $barcode);
         $stmt->execute();
@@ -91,7 +91,7 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
     $logstmt->bind_param("sssi", $page, $username, $log_action, $user_id);
     $logstmt->execute();
 } else {
-    echo "Session variables are not set.";
+   //echo "Session variables are not set.";
 }
 
 $conn->close();
@@ -241,7 +241,7 @@ $conn->close();
     <!-- <a href="addproduct.php">Add Product</a> -->
     <a href="addbarcodedirectly.php">Add Barcode</a>
     <a href="addbatchdirectly.php">Add Batch Directly</a>
-    <a href="addbatchdirectlyall.php">Add Batch All Directly</a>
+    <!-- <a href="addbatchdirectlyall.php">Add Batch All Directly</a>-->
     <a href="addproductdirectly.php">Add barcode Directly</a>
     <a href="foissue.php">Front Office</a>
     <a href="foonboard.php">Band Update onboard</a>

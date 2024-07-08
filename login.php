@@ -34,6 +34,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($result->num_rows == 1) {
             $row = $result->fetch_assoc();
             if (password_verify($password, $row["password"])) {
+            // if($password===$row["password"]){
                 $_SESSION["loggedin"] = true;
                 $_SESSION["empid"] = $row["empid"];
                 $_SESSION["username"] = $row["username"];

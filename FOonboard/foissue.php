@@ -32,7 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $username = $_SESSION["username"];
 
         // Check if the barcode exists in the database
-        $checksql = "SELECT * FROM band WHERE `bar_code` = ?";
+        $checksql = "SELECT bar_code FROM band WHERE `bar_code` = ?";
         $stmt = $conn->prepare($checksql);
         $stmt->bind_param("s", $barcode);
         $stmt->execute();
@@ -92,7 +92,7 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
     $logstmt->bind_param("sssi", $page, $username, $log_action, $user_id);
     $logstmt->execute();
 } else {
-    echo "Session variables are not set.";
+   //echo "Session variables are not set.";
 }
 
 $conn->close();

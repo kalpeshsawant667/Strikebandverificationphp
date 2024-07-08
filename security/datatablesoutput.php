@@ -9,39 +9,26 @@ $conn = new mysqli($servername, $dbusername, $dbpassword, $database);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
-// $current_page = isset($_GET['page']) ? $_GET['page'] : 1;
-// $num_records_per_page = 10; // Set the number of records per page
 
-// $offset = ($current_page - 1) * $num_records_per_page;
 $sql = "SELECT * FROM band WHERE voiditem != true ORDER BY used_time DESC";
 $result = $conn->query($sql);
 
 
-// $num_pages= 10;
-// if((isset($_GET['page'])) && ($_GET['page']!=""))
-// {
-//     $page = $_GET['page'];
-// }
-// else
-// {
-//     $page=1;
-// }
-// $start_from = ($page-1) * $num_pages;
 
 if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
+  $username =  $_SESSION["username"];
   $log = "INSERT INTO user_log (page, username, log_action, user_id) VALUES (?, ?, ?, ?)";
   $logstmt = $conn->prepare($log);
   if (!$logstmt) {
     die("Prepare failed: " . $conn->error);
 }
   $page = "datatablesoutput";
-  $username =  $_SESSION["username"];
   $log_action = "user displayed table";
   $user_id = $_SESSION["empid"];
   $logstmt->bind_param("sssi", $page, $username, $log_action, $user_id);
   $logstmt->execute();
 } else {
-  echo "Session variables are not set.";
+ //echo "Session variables are not set.";
 }
 ?>
 <!DOCTYPE html>
@@ -240,7 +227,7 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
                 <th>Color Code</th>
                 <th>Batch Code</th>
                 <th>Barcode</th>
-                <th>Issue Time</th>
+                <th>Fo Issue Time</th>
                 <th>Used Time</th>
                 <th>Issued</th>
                 <th>Used</th>
@@ -257,7 +244,7 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
                     echo "<td>" . $row['color_code'] . "</td>";
                     echo "<td>" . $row['batch_code'] . "</td>";
                     echo "<td>" . $row['bar_code'] . "</td>";
-                    echo "<td>" . $row['issue_time'] . "</td>";
+                    echo "<td>" . $row['fo_issue_time'] . "</td>";
                     echo "<td>" . $row['used_time'] . "</td>";
                     echo "<td>" . ($row['issued'] ? 'Yes' : 'No') . "</td>";
                     echo "<td>" . ($row['used'] ? 'Yes' : 'No') . "</td>";

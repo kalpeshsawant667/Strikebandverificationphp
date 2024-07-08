@@ -29,13 +29,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($barcode !== null && $upgradebarcode !== null) {
         if ($barcode != $upgradebarcode) {
             $username = $_SESSION["username"];
-                $checksql = "SELECT * FROM band WHERE `bar_code` = ? && `fo_issued` = true && voiditem != true";
+                $checksql = "SELECT bar_code FROM band WHERE `bar_code` = ? && `fo_issued` = true && voiditem != true";
                 $stmt = $conn->prepare($checksql);
                 $stmt->bind_param("s", $barcode);
                 $stmt->execute();
                 $result = $stmt->get_result();
                 if ($result->num_rows > 0) {
-                    $checkupdatesql = "SELECT * FROM band WHERE `bar_code` = ? AND voiditem != true && `fo_issued` != true";
+                    $checkupdatesql = "SELECT bar_code FROM band WHERE `bar_code` = ? AND voiditem != true && `fo_issued` != true";
                     $updatestmt = $conn->prepare($checkupdatesql);
                     $updatestmt->bind_param("s", $upgradebarcode);
                     $updatestmt->execute();
@@ -66,7 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         } else {
             $backgroundColor = 'red';
-            // echo "<div style='background-color: red; text-align: center; font-size: 5rem; color: black'>Same Barcode</div>";
+            echo "<div style='background-color: red; text-align: center; font-size: 5rem; color: black'>Same Barcode</div>";
         }
     }
 } else {
@@ -96,7 +96,7 @@ if(isset($_SESSION["username"]) && isset($_SESSION["empid"])) {
     $logstmt->bind_param("sssi", $page, $username, $log_action, $user_id);
     $logstmt->execute();
 } else {
-    echo "Session variables are not set.";
+   //echo "Session variables are not set.";
 }
 
 $conn->close();
@@ -269,7 +269,7 @@ $conn->close();
     <!-- <a href="addproduct.php">Add Product</a> -->
     <a href="addbarcodedirectly.php">Add Barcode</a>
     <a href="addbatchdirectly.php">Add Batch Directly</a>
-    <a href="addbatchdirectlyall.php">Add Batch All Directly</a>
+    <!-- <a href="addbatchdirectlyall.php">Add Batch All Directly</a>-->
     <a href="addproductdirectly.php">Add barcode Directly</a>
     <a href="foissue.php">Front Office</a>
     <a href="foonboard.php">Band Update onboard</a>

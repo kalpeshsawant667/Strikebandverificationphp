@@ -37,7 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $sql = "INSERT INTO `band`(`company`, `color_code`, `batch_code`, `letter`, `bar_code`, `issue_time`, `issued`) 
                 VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-        $company = substr($bar_code, 0, 3); // BD
+        $company = substr($bar_code, 0, 3); // SBD
         $color_code = substr($bar_code, 3, 3);
         $batch_code = substr($bar_code, 6, 4);
         $letter = substr($bar_code, 10, 1);
@@ -83,7 +83,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           $logstmt->bind_param("sssi", $page, $username, $log_action, $user_id);
           $logstmt->execute();
         } else {
-          echo "Session variables are not set.";
+         //echo "Session variables are not set.";
         }
         $stmt->close();
     } else {
